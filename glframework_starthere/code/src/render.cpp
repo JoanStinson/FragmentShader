@@ -3,37 +3,38 @@
 #include <glm\gtc\matrix_transform.hpp>
 #include <cstdio>
 #include <cassert>
-#include <vector>
 
 #include "GL_framework.h"
+#include <vector>
 
-std::vector<glm::vec3> vertices;
-std::vector<glm::vec2> uvs;
-std::vector<glm::vec3> normals;
+std::vector< glm::vec3> vertices;
+std::vector< glm::vec2> uvs;
+std::vector< glm::vec3> normals;
 
-extern bool loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, std::vector<glm::vec2>& out_uvs, std::vector<glm::vec3>& out_normals);
+extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals); 
 
 ///////// fw decl
 namespace ImGui {
 	void Render();
 }
 namespace Box {
-void setupCube();
-void cleanupCube();
-void drawCube();
+	void setupCube();
+	void cleanupCube();
+	void drawCube();
 }
 namespace Axis {
-void setupAxis();
-void cleanupAxis();
-void drawAxis();
+	void setupAxis();
+	void cleanupAxis();
+	void drawAxis();
 }
 
 namespace Cube {
 	void setupCube();
 	void cleanupCube();
 	void updateCube(const glm::mat4& transform);
-	void drawCube(double currentTime);
+	void drawCube();
 }
+
 
 ////////////////
 
@@ -61,15 +62,15 @@ namespace RV = RenderVars;
 
 void GLResize(int width, int height) {
 	glViewport(0, 0, width, height);
-	if(height != 0) RV::_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
+	if (height != 0) RV::_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
 	else RV::_projection = glm::perspective(RV::FOV, 0.f, RV::zNear, RV::zFar);
 }
 
 void GLmousecb(MouseEvent ev) {
-	if(RV::prevMouse.waspressed && RV::prevMouse.button == ev.button) {
+	if (RV::prevMouse.waspressed && RV::prevMouse.button == ev.button) {
 		float diffx = ev.posx - RV::prevMouse.lastx;
 		float diffy = ev.posy - RV::prevMouse.lasty;
-		switch(ev.button) {
+		switch (ev.button) {
 		case MouseEvent::Button::Left: // ROTATE
 			RV::rota[0] += diffx * 0.005f;
 			RV::rota[1] += diffy * 0.005f;
@@ -83,7 +84,8 @@ void GLmousecb(MouseEvent ev) {
 			break;
 		default: break;
 		}
-	} else {
+	}
+	else {
 		RV::prevMouse.button = ev.button;
 		RV::prevMouse.waspressed = true;
 	}
@@ -99,31 +101,23 @@ void GLinit(int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	RV::_projection = glm::perspective(RV::FOV, (float)width/(float)height, RV::zNear, RV::zFar);
+	RV::_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
 
 	// Setup shaders & geometry
-	/*Box::setupCube();*/
-	Axis::setupAxis();
-	Cube::setupCube();
+	/*Box::setupCube();
+	Axis::setupAxis();*/
+	//Cube::setupCube();
 
-
-
-
-
-
-
-
-
+	// Read our .obj file
+	bool res = loadOBJ("cube.obj", vertices, uvs, normals);
 
 }
 
 void GLcleanup() {
-	//Box::cleanupCube();
-	Axis::cleanupAxis();
-	Cube::cleanupCube();
-
-
-
+	/*Box::cleanupCube();
+	Axis::cleanupAxis();*/
+	//Cube::cleanupCube();
+	
 }
 
 void GLrender(double currentTime) {
@@ -137,18 +131,18 @@ void GLrender(double currentTime) {
 	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// render code
-	//Box::drawCube();
-	Axis::drawAxis();
-	Cube::drawCube(currentTime);
+	/*Box::drawCube();
+	Axis::drawAxis();*/
+	//Cube::drawCube();
 
-
+		
 
 	ImGui::Render();
 }
 
 
 //////////////////////////////////// COMPILE AND LINK
-GLuint compileShader(const char* shaderStr, GLenum shaderType, const char* name="") {
+GLuint compileShader(const char* shaderStr, GLenum shaderType, const char* name = "") {
 	GLuint shader = glCreateShader(shaderType);
 	glShaderSource(shader, 1, &shaderStr, NULL);
 	glCompileShader(shader);
@@ -179,129 +173,129 @@ void linkProgram(GLuint program) {
 }
 
 ////////////////////////////////////////////////// BOX
-namespace Box{
-GLuint cubeVao;
-GLuint cubeVbo[2];
-GLuint cubeShaders[2];
-GLuint cubeProgram;
+namespace Box {
+	GLuint cubeVao;
+	GLuint cubeVbo[2];
+	GLuint cubeShaders[2];
+	GLuint cubeProgram;
 
-float cubeVerts[] = {
-	// -5,0,-5 -- 5, 10, 5
-	-5.f,  0.f, -5.f,
-	 5.f,  0.f, -5.f,
-	 5.f,  0.f,  5.f,
-	-5.f,  0.f,  5.f,
-	-5.f, 10.f, -5.f,
-	 5.f, 10.f, -5.f,
-	 5.f, 10.f,  5.f,
-	-5.f, 10.f,  5.f,
-};
-GLubyte cubeIdx[] = {
-	1, 0, 2, 3, // Floor - TriangleStrip
-	0, 1, 5, 4, // Wall - Lines
-	1, 2, 6, 5, // Wall - Lines
-	2, 3, 7, 6, // Wall - Lines
-	3, 0, 4, 7  // Wall - Lines
-};
+	float cubeVerts[] = {
+		// -5,0,-5 -- 5, 10, 5
+		-5.f,  0.f, -5.f,
+		5.f,  0.f, -5.f,
+		5.f,  0.f,  5.f,
+		-5.f,  0.f,  5.f,
+		-5.f, 10.f, -5.f,
+		5.f, 10.f, -5.f,
+		5.f, 10.f,  5.f,
+		-5.f, 10.f,  5.f,
+	};
+	GLubyte cubeIdx[] = {
+		1, 0, 2, 3, // Floor - TriangleStrip
+		0, 1, 5, 4, // Wall - Lines
+		1, 2, 6, 5, // Wall - Lines
+		2, 3, 7, 6, // Wall - Lines
+		3, 0, 4, 7  // Wall - Lines
+	};
 
-const char* vertShader_xform =
-"#version 330\n\
+	const char* vertShader_xform =
+		"#version 330\n\
 in vec3 in_Position;\n\
 uniform mat4 mvpMat;\n\
 void main() {\n\
 	gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
 }";
-const char* fragShader_flatColor =
-"#version 330\n\
+	const char* fragShader_flatColor =
+		"#version 330\n\
 out vec4 out_Color;\n\
 uniform vec4 color;\n\
 void main() {\n\
 	out_Color = color;\n\
 }";
 
-void setupCube() {
-	glGenVertexArrays(1, &cubeVao);
-	glBindVertexArray(cubeVao);
-	glGenBuffers(2, cubeVbo);
+	void setupCube() {
+		glGenVertexArrays(1, &cubeVao);
+		glBindVertexArray(cubeVao);
+		glGenBuffers(2, cubeVbo);
 
-	glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, cubeVerts, GL_STATIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, cubeVerts, GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeVbo[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 20, cubeIdx, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeVbo[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 20, cubeIdx, GL_STATIC_DRAW);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	cubeShaders[0] = compileShader(vertShader_xform, GL_VERTEX_SHADER, "cubeVert");
-	cubeShaders[1] = compileShader(fragShader_flatColor, GL_FRAGMENT_SHADER, "cubeFrag");
+		cubeShaders[0] = compileShader(vertShader_xform, GL_VERTEX_SHADER, "cubeVert");
+		cubeShaders[1] = compileShader(fragShader_flatColor, GL_FRAGMENT_SHADER, "cubeFrag");
 
-	cubeProgram = glCreateProgram();
-	glAttachShader(cubeProgram, cubeShaders[0]);
-	glAttachShader(cubeProgram, cubeShaders[1]);
-	glBindAttribLocation(cubeProgram, 0, "in_Position");
-	linkProgram(cubeProgram);
-}
-void cleanupCube() {
-	glDeleteBuffers(2, cubeVbo);
-	glDeleteVertexArrays(1, &cubeVao);
+		cubeProgram = glCreateProgram();
+		glAttachShader(cubeProgram, cubeShaders[0]);
+		glAttachShader(cubeProgram, cubeShaders[1]);
+		glBindAttribLocation(cubeProgram, 0, "in_Position");
+		linkProgram(cubeProgram);
+	}
+	void cleanupCube() {
+		glDeleteBuffers(2, cubeVbo);
+		glDeleteVertexArrays(1, &cubeVao);
 
-	glDeleteProgram(cubeProgram);
-	glDeleteShader(cubeShaders[0]);
-	glDeleteShader(cubeShaders[1]);
-}
-void drawCube() {
-	glBindVertexArray(cubeVao);
-	glUseProgram(cubeProgram);
-	glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	// FLOOR
-	glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.6f, 0.6f, 0.6f, 1.f);
-	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, 0);
-	// WALLS
-	glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.f, 0.f, 0.f, 1.f);
-	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 4));
-	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 8));
-	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 12));
-	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 16));
+		glDeleteProgram(cubeProgram);
+		glDeleteShader(cubeShaders[0]);
+		glDeleteShader(cubeShaders[1]);
+	}
+	void drawCube() {
+		glBindVertexArray(cubeVao);
+		glUseProgram(cubeProgram);
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		// FLOOR
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.6f, 0.6f, 0.6f, 1.f);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, 0);
+		// WALLS
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.f, 0.f, 0.f, 1.f);
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 4));
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 8));
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 12));
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 16));
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-}
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 }
 
 ////////////////////////////////////////////////// AXIS
 namespace Axis {
-GLuint AxisVao;
-GLuint AxisVbo[3];
-GLuint AxisShader[2];
-GLuint AxisProgram;
+	GLuint AxisVao;
+	GLuint AxisVbo[3];
+	GLuint AxisShader[2];
+	GLuint AxisProgram;
 
-float AxisVerts[] = {
-	0.0, 0.0, 0.0,
-	1.0, 0.0, 0.0,
-	0.0, 0.0, 0.0,
-	0.0, 1.0, 0.0,
-	0.0, 0.0, 0.0,
-	0.0, 0.0, 1.0
-};
-float AxisColors[] = {
-	1.0, 0.0, 0.0, 1.0,
-	1.0, 0.0, 0.0, 1.0,
-	0.0, 1.0, 0.0, 1.0,
-	0.0, 1.0, 0.0, 1.0,
-	0.0, 0.0, 1.0, 1.0,
-	0.0, 0.0, 1.0, 1.0
-};
-GLubyte AxisIdx[] = {
-	0, 1,
-	2, 3,
-	4, 5
-};
-const char* Axis_vertShader =
-"#version 330\n\
+	float AxisVerts[] = {
+		0.0, 0.0, 0.0,
+		1.0, 0.0, 0.0,
+		0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0,
+		0.0, 0.0, 1.0
+	};
+	float AxisColors[] = {
+		1.0, 0.0, 0.0, 1.0,
+		1.0, 0.0, 0.0, 1.0,
+		0.0, 1.0, 0.0, 1.0,
+		0.0, 1.0, 0.0, 1.0,
+		0.0, 0.0, 1.0, 1.0,
+		0.0, 0.0, 1.0, 1.0
+	};
+	GLubyte AxisIdx[] = {
+		0, 1,
+		2, 3,
+		4, 5
+	};
+	const char* Axis_vertShader =
+		"#version 330\n\
 in vec3 in_Position;\n\
 in vec4 in_Color;\n\
 out vec4 vert_color;\n\
@@ -310,82 +304,82 @@ void main() {\n\
 	vert_color = in_Color;\n\
 	gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
 }";
-const char* Axis_fragShader =
-"#version 330\n\
+	const char* Axis_fragShader =
+		"#version 330\n\
 in vec4 vert_color;\n\
 out vec4 out_Color;\n\
 void main() {\n\
 	out_Color = vert_color;\n\
 }";
 
-void setupAxis() {
-	glGenVertexArrays(1, &AxisVao);
-	glBindVertexArray(AxisVao);
-	glGenBuffers(3, AxisVbo);
+	void setupAxis() {
+		glGenVertexArrays(1, &AxisVao);
+		glBindVertexArray(AxisVao);
+		glGenBuffers(3, AxisVbo);
 
-	glBindBuffer(GL_ARRAY_BUFFER, AxisVbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, AxisVerts, GL_STATIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, AxisVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, AxisVerts, GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, AxisVbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, AxisColors, GL_STATIC_DRAW);
-	glVertexAttribPointer((GLuint)1, 4, GL_FLOAT, false, 0, 0);
-	glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, AxisVbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, AxisColors, GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)1, 4, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, AxisVbo[2]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 6, AxisIdx, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, AxisVbo[2]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 6, AxisIdx, GL_STATIC_DRAW);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	AxisShader[0] = compileShader(Axis_vertShader, GL_VERTEX_SHADER, "AxisVert");
-	AxisShader[1] = compileShader(Axis_fragShader, GL_FRAGMENT_SHADER, "AxisFrag");
+		AxisShader[0] = compileShader(Axis_vertShader, GL_VERTEX_SHADER, "AxisVert");
+		AxisShader[1] = compileShader(Axis_fragShader, GL_FRAGMENT_SHADER, "AxisFrag");
 
-	AxisProgram = glCreateProgram();
-	glAttachShader(AxisProgram, AxisShader[0]);
-	glAttachShader(AxisProgram, AxisShader[1]);
-	glBindAttribLocation(AxisProgram, 0, "in_Position");
-	glBindAttribLocation(AxisProgram, 1, "in_Color");
-	linkProgram(AxisProgram);
-}
-void cleanupAxis() {
-	glDeleteBuffers(3, AxisVbo);
-	glDeleteVertexArrays(1, &AxisVao);
+		AxisProgram = glCreateProgram();
+		glAttachShader(AxisProgram, AxisShader[0]);
+		glAttachShader(AxisProgram, AxisShader[1]);
+		glBindAttribLocation(AxisProgram, 0, "in_Position");
+		glBindAttribLocation(AxisProgram, 1, "in_Color");
+		linkProgram(AxisProgram);
+	}
+	void cleanupAxis() {
+		glDeleteBuffers(3, AxisVbo);
+		glDeleteVertexArrays(1, &AxisVao);
 
-	glDeleteProgram(AxisProgram);
-	glDeleteShader(AxisShader[0]);
-	glDeleteShader(AxisShader[1]);
-}
-void drawAxis() {
-	glBindVertexArray(AxisVao);
-	glUseProgram(AxisProgram);
-	glUniformMatrix4fv(glGetUniformLocation(AxisProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	glDrawElements(GL_LINES, 6, GL_UNSIGNED_BYTE, 0);
+		glDeleteProgram(AxisProgram);
+		glDeleteShader(AxisShader[0]);
+		glDeleteShader(AxisShader[1]);
+	}
+	void drawAxis() {
+		glBindVertexArray(AxisVao);
+		glUseProgram(AxisProgram);
+		glUniformMatrix4fv(glGetUniformLocation(AxisProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		glDrawElements(GL_LINES, 6, GL_UNSIGNED_BYTE, 0);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-}
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 }
 
 ////////////////////////////////////////////////// SPHERE
 namespace Sphere {
-GLuint sphereVao;
-GLuint sphereVbo;
-GLuint sphereShaders[3];
-GLuint sphereProgram;
-float radius;
+	GLuint sphereVao;
+	GLuint sphereVbo;
+	GLuint sphereShaders[3];
+	GLuint sphereProgram;
+	float radius;
 
-const char* sphere_vertShader =
-"#version 330\n\
+	const char* sphere_vertShader =
+		"#version 330\n\
 in vec3 in_Position;\n\
 uniform mat4 mv_Mat;\n\
 void main() {\n\
 	gl_Position = mv_Mat * vec4(in_Position, 1.0);\n\
 }";
-const char* sphere_geomShader =
-"#version 330\n\
+	const char* sphere_geomShader =
+		"#version 330\n\
 layout(points) in;\n\
 layout(triangle_strip, max_vertices = 4) out;\n\
 out vec4 eyePos;\n\
@@ -410,8 +404,8 @@ void main() {\n\
 	}\n\
 	EndPrimitive();\n\
 }";
-const char* sphere_fragShader_flatColor =
-"#version 330\n\
+	const char* sphere_fragShader_flatColor =
+		"#version 330\n\
 in vec4 eyePos;\n\
 in vec4 centerEyePos;\n\
 out vec4 out_Color;\n\
@@ -431,96 +425,96 @@ void main() {\n\
 	out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
 }";
 
-bool shadersCreated = false;
-void createSphereShaderAndProgram() {
-	if(shadersCreated) return;
+	bool shadersCreated = false;
+	void createSphereShaderAndProgram() {
+		if (shadersCreated) return;
 
-	sphereShaders[0] = compileShader(sphere_vertShader, GL_VERTEX_SHADER, "sphereVert");
-	sphereShaders[1] = compileShader(sphere_geomShader, GL_GEOMETRY_SHADER, "sphereGeom");
-	sphereShaders[2] = compileShader(sphere_fragShader_flatColor, GL_FRAGMENT_SHADER, "sphereFrag");
+		sphereShaders[0] = compileShader(sphere_vertShader, GL_VERTEX_SHADER, "sphereVert");
+		sphereShaders[1] = compileShader(sphere_geomShader, GL_GEOMETRY_SHADER, "sphereGeom");
+		sphereShaders[2] = compileShader(sphere_fragShader_flatColor, GL_FRAGMENT_SHADER, "sphereFrag");
 
-	sphereProgram = glCreateProgram();
-	glAttachShader(sphereProgram, sphereShaders[0]);
-	glAttachShader(sphereProgram, sphereShaders[1]);
-	glAttachShader(sphereProgram, sphereShaders[2]);
-	glBindAttribLocation(sphereProgram, 0, "in_Position");
-	linkProgram(sphereProgram);
+		sphereProgram = glCreateProgram();
+		glAttachShader(sphereProgram, sphereShaders[0]);
+		glAttachShader(sphereProgram, sphereShaders[1]);
+		glAttachShader(sphereProgram, sphereShaders[2]);
+		glBindAttribLocation(sphereProgram, 0, "in_Position");
+		linkProgram(sphereProgram);
 
-	shadersCreated = true;
-}
-void cleanupSphereShaderAndProgram() {
-	if(!shadersCreated) return;
-	glDeleteProgram(sphereProgram);
-	glDeleteShader(sphereShaders[0]);
-	glDeleteShader(sphereShaders[1]);
-	glDeleteShader(sphereShaders[2]);
-	shadersCreated = false;
-}
+		shadersCreated = true;
+	}
+	void cleanupSphereShaderAndProgram() {
+		if (!shadersCreated) return;
+		glDeleteProgram(sphereProgram);
+		glDeleteShader(sphereShaders[0]);
+		glDeleteShader(sphereShaders[1]);
+		glDeleteShader(sphereShaders[2]);
+		shadersCreated = false;
+	}
 
-void setupSphere(glm::vec3 pos, float radius) {
-	Sphere::radius = radius;
-	glGenVertexArrays(1, &sphereVao);
-	glBindVertexArray(sphereVao);
-	glGenBuffers(1, &sphereVbo);
+	void setupSphere(glm::vec3 pos, float radius) {
+		Sphere::radius = radius;
+		glGenVertexArrays(1, &sphereVao);
+		glBindVertexArray(sphereVao);
+		glGenBuffers(1, &sphereVbo);
 
-	glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &pos, GL_DYNAMIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &pos, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	createSphereShaderAndProgram();
-}
-void cleanupSphere() {
-	glDeleteBuffers(1, &sphereVbo);
-	glDeleteVertexArrays(1, &sphereVao);
+		createSphereShaderAndProgram();
+	}
+	void cleanupSphere() {
+		glDeleteBuffers(1, &sphereVbo);
+		glDeleteVertexArrays(1, &sphereVao);
 
-	cleanupSphereShaderAndProgram();
-}
-void updateSphere(glm::vec3 pos, float radius) {
-	glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	buff[0] = pos.x;
-	buff[1] = pos.y;
-	buff[2] = pos.z;
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	Sphere::radius = radius;
-}
-void drawSphere() {
-	glBindVertexArray(sphereVao);
-	glUseProgram(sphereProgram);
-	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
-	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
-	glUniform4f(glGetUniformLocation(sphereProgram, "color"), 0.6f, 0.1f, 0.1f, 1.f);
-	glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
-	glDrawArrays(GL_POINTS, 0, 1);
+		cleanupSphereShaderAndProgram();
+	}
+	void updateSphere(glm::vec3 pos, float radius) {
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
+		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		buff[0] = pos.x;
+		buff[1] = pos.y;
+		buff[2] = pos.z;
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		Sphere::radius = radius;
+	}
+	void drawSphere() {
+		glBindVertexArray(sphereVao);
+		glUseProgram(sphereProgram);
+		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
+		glUniform4f(glGetUniformLocation(sphereProgram, "color"), 0.6f, 0.1f, 0.1f, 1.f);
+		glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
+		glDrawArrays(GL_POINTS, 0, 1);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-}
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 }
 
 ////////////////////////////////////////////////// CAPSULE
 namespace Capsule {
-GLuint capsuleVao;
-GLuint capsuleVbo[2];
-GLuint capsuleShader[3];
-GLuint capsuleProgram;
-float radius;
+	GLuint capsuleVao;
+	GLuint capsuleVbo[2];
+	GLuint capsuleShader[3];
+	GLuint capsuleProgram;
+	float radius;
 
-const char* capsule_vertShader =
-"#version 330\n\
+	const char* capsule_vertShader =
+		"#version 330\n\
 in vec3 in_Position;\n\
 uniform mat4 mv_Mat;\n\
 void main() {\n\
 	gl_Position = mv_Mat * vec4(in_Position, 1.0);\n\
 }";
-const char* capsule_geomShader =
-"#version 330\n\
+	const char* capsule_geomShader =
+		"#version 330\n\
 layout(lines) in; \n\
 layout(triangle_strip, max_vertices = 14) out;\n\
 out vec3 eyePos;\n\
@@ -568,8 +562,8 @@ void main(){\n\
 	}\n\
 	EndPrimitive();\n\
 }";
-const char* capsule_fragShader_flatColor =
-"#version 330\n\
+	const char* capsule_fragShader_flatColor =
+		"#version 330\n\
 in vec3 eyePos;\n\
 in vec3 capPoints[2];\n\
 out vec4 out_Color;\n\
@@ -611,233 +605,233 @@ void main() {\n\
 	out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
 }";
 
-void setupCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
-	Capsule::radius = radius;
-	glGenVertexArrays(1, &capsuleVao);
-	glBindVertexArray(capsuleVao);
-	glGenBuffers(2, capsuleVbo);
+	void setupCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
+		Capsule::radius = radius;
+		glGenVertexArrays(1, &capsuleVao);
+		glBindVertexArray(capsuleVao);
+		glGenBuffers(2, capsuleVbo);
 
-	float capsuleVerts[] = {
-		posA.x, posA.y, posA.z, 
-		posB.x, posB.y, posB.z
-	};
-	GLubyte capsuleIdx[] = {
-		0, 1
-	};
+		float capsuleVerts[] = {
+			posA.x, posA.y, posA.z,
+			posB.x, posB.y, posB.z
+		};
+		GLubyte capsuleIdx[] = {
+			0, 1
+		};
 
-	glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, capsuleVerts, GL_DYNAMIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, capsuleVerts, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, capsuleVbo[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 2, capsuleIdx, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, capsuleVbo[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 2, capsuleIdx, GL_STATIC_DRAW);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	capsuleShader[0] = compileShader(capsule_vertShader, GL_VERTEX_SHADER, "capsuleVert");
-	capsuleShader[1] = compileShader(capsule_geomShader, GL_GEOMETRY_SHADER, "capsuleGeom");
-	capsuleShader[2] = compileShader(capsule_fragShader_flatColor, GL_FRAGMENT_SHADER, "capsuleFrag");
+		capsuleShader[0] = compileShader(capsule_vertShader, GL_VERTEX_SHADER, "capsuleVert");
+		capsuleShader[1] = compileShader(capsule_geomShader, GL_GEOMETRY_SHADER, "capsuleGeom");
+		capsuleShader[2] = compileShader(capsule_fragShader_flatColor, GL_FRAGMENT_SHADER, "capsuleFrag");
 
-	capsuleProgram = glCreateProgram();
-	glAttachShader(capsuleProgram, capsuleShader[0]);
-	glAttachShader(capsuleProgram, capsuleShader[1]);
-	glAttachShader(capsuleProgram, capsuleShader[2]);
-	glBindAttribLocation(capsuleProgram, 0, "in_Position");
-	linkProgram(capsuleProgram);
-}
-void cleanupCapsule() {
-	glDeleteBuffers(2, capsuleVbo);
-	glDeleteVertexArrays(1, &capsuleVao);
+		capsuleProgram = glCreateProgram();
+		glAttachShader(capsuleProgram, capsuleShader[0]);
+		glAttachShader(capsuleProgram, capsuleShader[1]);
+		glAttachShader(capsuleProgram, capsuleShader[2]);
+		glBindAttribLocation(capsuleProgram, 0, "in_Position");
+		linkProgram(capsuleProgram);
+	}
+	void cleanupCapsule() {
+		glDeleteBuffers(2, capsuleVbo);
+		glDeleteVertexArrays(1, &capsuleVao);
 
-	glDeleteProgram(capsuleProgram);
-	glDeleteShader(capsuleShader[0]);
-	glDeleteShader(capsuleShader[1]);
-	glDeleteShader(capsuleShader[2]);
-}
-void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
-	float vertPos[] = {posA.x, posA.y, posA.z, posB.z, posB.y, posB.z};
-	glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
-	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	buff[0] = posA.x; buff[1] = posA.y; buff[2] = posA.z;
-	buff[3] = posB.x; buff[4] = posB.y; buff[5] = posB.z;
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	Capsule::radius = radius;
-}
-void drawCapsule() {
-	glBindVertexArray(capsuleVao);
-	glUseProgram(capsuleProgram);
-	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
-	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
-	glUniform4fv(glGetUniformLocation(capsuleProgram, "camPoint"), 1, &RV::_cameraPoint[0]);
-	glUniform4f(glGetUniformLocation(capsuleProgram, "color"), 0.1f, 0.6f, 0.1f, 1.f);
-	glUniform1f(glGetUniformLocation(capsuleProgram, "radius"), Capsule::radius);
-	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, 0);
+		glDeleteProgram(capsuleProgram);
+		glDeleteShader(capsuleShader[0]);
+		glDeleteShader(capsuleShader[1]);
+		glDeleteShader(capsuleShader[2]);
+	}
+	void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
+		float vertPos[] = { posA.x, posA.y, posA.z, posB.z, posB.y, posB.z };
+		glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
+		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		buff[0] = posA.x; buff[1] = posA.y; buff[2] = posA.z;
+		buff[3] = posB.x; buff[4] = posB.y; buff[5] = posB.z;
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		Capsule::radius = radius;
+	}
+	void drawCapsule() {
+		glBindVertexArray(capsuleVao);
+		glUseProgram(capsuleProgram);
+		glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
+		glUniform4fv(glGetUniformLocation(capsuleProgram, "camPoint"), 1, &RV::_cameraPoint[0]);
+		glUniform4f(glGetUniformLocation(capsuleProgram, "color"), 0.1f, 0.6f, 0.1f, 1.f);
+		glUniform1f(glGetUniformLocation(capsuleProgram, "radius"), Capsule::radius);
+		glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, 0);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-}
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 }
 
 ////////////////////////////////////////////////// PARTICLES
 // Same rendering as Sphere (reusing shaders)
 namespace LilSpheres {
-GLuint particlesVao;
-GLuint particlesVbo;
-float radius;
-int numparticles;
-extern const int maxParticles = SHRT_MAX;
+	GLuint particlesVao;
+	GLuint particlesVbo;
+	float radius;
+	int numparticles;
+	extern const int maxParticles = SHRT_MAX;
 
-void setupParticles(int numTotalParticles, float radius) {
-	assert(numTotalParticles > 0);
-	assert(numTotalParticles <= SHRT_MAX);
-	numparticles = numTotalParticles;
-	LilSpheres::radius = radius;
-	
-	glGenVertexArrays(1, &particlesVao);
-	glBindVertexArray(particlesVao);
-	glGenBuffers(1, &particlesVbo);
+	void setupParticles(int numTotalParticles, float radius) {
+		assert(numTotalParticles > 0);
+		assert(numTotalParticles <= SHRT_MAX);
+		numparticles = numTotalParticles;
+		LilSpheres::radius = radius;
 
-	glBindBuffer(GL_ARRAY_BUFFER, particlesVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * numparticles, 0, GL_DYNAMIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glGenVertexArrays(1, &particlesVao);
+		glBindVertexArray(particlesVao);
+		glGenBuffers(1, &particlesVbo);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, particlesVbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * numparticles, 0, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	Sphere::createSphereShaderAndProgram();
-}
-void cleanupParticles() {
-	glDeleteVertexArrays(1, &particlesVao);
-	glDeleteBuffers(1, &particlesVbo);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	Sphere::cleanupSphereShaderAndProgram();
-}
-void updateParticles(int startIdx, int count, float* array_data) {
-	glBindBuffer(GL_ARRAY_BUFFER, particlesVbo);
-	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	buff = &buff[3*startIdx];
-	for(int i = 0; i < 3*count; ++i) {
-		buff[i] = array_data[i];
+		Sphere::createSphereShaderAndProgram();
 	}
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-void drawParticles(int startIdx, int count) {
-	glBindVertexArray(particlesVao);
-	glUseProgram(Sphere::sphereProgram);
-	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
-	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
-	glUniform4f(glGetUniformLocation(Sphere::sphereProgram, "color"), 0.1f, 0.1f, 0.6f, 1.f);
-	glUniform1f(glGetUniformLocation(Sphere::sphereProgram, "radius"), LilSpheres::radius);
-	glDrawArrays(GL_POINTS, startIdx, count);
+	void cleanupParticles() {
+		glDeleteVertexArrays(1, &particlesVao);
+		glDeleteBuffers(1, &particlesVbo);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-}
+		Sphere::cleanupSphereShaderAndProgram();
+	}
+	void updateParticles(int startIdx, int count, float* array_data) {
+		glBindBuffer(GL_ARRAY_BUFFER, particlesVbo);
+		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		buff = &buff[3 * startIdx];
+		for (int i = 0; i < 3 * count; ++i) {
+			buff[i] = array_data[i];
+		}
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	void drawParticles(int startIdx, int count) {
+		glBindVertexArray(particlesVao);
+		glUseProgram(Sphere::sphereProgram);
+		glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
+		glUniform4f(glGetUniformLocation(Sphere::sphereProgram, "color"), 0.1f, 0.1f, 0.6f, 1.f);
+		glUniform1f(glGetUniformLocation(Sphere::sphereProgram, "radius"), LilSpheres::radius);
+		glDrawArrays(GL_POINTS, startIdx, count);
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 }
 
 ////////////////////////////////////////////////// CLOTH
 namespace ClothMesh {
-GLuint clothVao;
-GLuint clothVbo[2];
-GLuint clothShaders[2];
-GLuint clothProgram;
-extern const int numCols = 14;
-extern const int numRows = 18;
-extern const int numVerts = numRows * numCols;
-int numVirtualVerts;
+	GLuint clothVao;
+	GLuint clothVbo[2];
+	GLuint clothShaders[2];
+	GLuint clothProgram;
+	extern const int numCols = 14;
+	extern const int numRows = 18;
+	extern const int numVerts = numRows * numCols;
+	int numVirtualVerts;
 
-const char* cloth_vertShader =
-"#version 330\n\
+	const char* cloth_vertShader =
+		"#version 330\n\
 in vec3 in_Position;\n\
 uniform mat4 mvpMat;\n\
 void main() {\n\
 	gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
 }";
-const char* cloth_fragShader =
-"#version 330\n\
+	const char* cloth_fragShader =
+		"#version 330\n\
 uniform vec4 color;\n\
 out vec4 out_Color;\n\
 void main() {\n\
 	out_Color = color;\n\
 }";
 
-void setupClothMesh() {
-	glGenVertexArrays(1, &clothVao);
-	glBindVertexArray(clothVao);
-	glGenBuffers(2, clothVbo);
+	void setupClothMesh() {
+		glGenVertexArrays(1, &clothVao);
+		glBindVertexArray(clothVao);
+		glGenBuffers(2, clothVbo);
 
-	glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * numVerts, 0, GL_DYNAMIC_DRAW);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * numVerts, 0, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
 
-	glPrimitiveRestartIndex(UCHAR_MAX);
-	constexpr int facesVertsIdx = 5 * (numCols - 1) * (numRows - 1);
-	GLubyte facesIdx[facesVertsIdx] = { 0 };
-	for (int i = 0; i < (numRows - 1); ++i) {
-		for (int j = 0; j < (numCols - 1); ++j) {
-			facesIdx[5 * (i*(numCols-1) + j) + 0] = i*numCols + j;
-			facesIdx[5 * (i*(numCols-1) + j) + 1] = (i + 1)*numCols + j;
-			facesIdx[5 * (i*(numCols-1) + j) + 2] = (i + 1)*numCols + (j + 1);
-			facesIdx[5 * (i*(numCols-1) + j) + 3] = i*numCols + (j + 1);
-			facesIdx[5 * (i*(numCols-1) + j) + 4] = UCHAR_MAX;
+		glPrimitiveRestartIndex(UCHAR_MAX);
+		constexpr int facesVertsIdx = 5 * (numCols - 1) * (numRows - 1);
+		GLubyte facesIdx[facesVertsIdx] = { 0 };
+		for (int i = 0; i < (numRows - 1); ++i) {
+			for (int j = 0; j < (numCols - 1); ++j) {
+				facesIdx[5 * (i*(numCols - 1) + j) + 0] = i * numCols + j;
+				facesIdx[5 * (i*(numCols - 1) + j) + 1] = (i + 1)*numCols + j;
+				facesIdx[5 * (i*(numCols - 1) + j) + 2] = (i + 1)*numCols + (j + 1);
+				facesIdx[5 * (i*(numCols - 1) + j) + 3] = i * numCols + (j + 1);
+				facesIdx[5 * (i*(numCols - 1) + j) + 4] = UCHAR_MAX;
+			}
 		}
+		numVirtualVerts = facesVertsIdx;
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothVbo[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte)*numVirtualVerts, facesIdx, GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		clothShaders[0] = compileShader(cloth_vertShader, GL_VERTEX_SHADER, "clothVert");
+		clothShaders[1] = compileShader(cloth_fragShader, GL_FRAGMENT_SHADER, "clothFrag");
+
+		clothProgram = glCreateProgram();
+		glAttachShader(clothProgram, clothShaders[0]);
+		glAttachShader(clothProgram, clothShaders[1]);
+		glBindAttribLocation(clothProgram, 0, "in_Position");
+		linkProgram(clothProgram);
 	}
-	numVirtualVerts = facesVertsIdx;
+	void cleanupClothMesh() {
+		glDeleteBuffers(2, clothVbo);
+		glDeleteVertexArrays(1, &clothVao);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothVbo[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte)*numVirtualVerts, facesIdx, GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	clothShaders[0] = compileShader(cloth_vertShader, GL_VERTEX_SHADER, "clothVert");
-	clothShaders[1] = compileShader(cloth_fragShader, GL_FRAGMENT_SHADER, "clothFrag");
-
-	clothProgram = glCreateProgram();
-	glAttachShader(clothProgram, clothShaders[0]);
-	glAttachShader(clothProgram, clothShaders[1]);
-	glBindAttribLocation(clothProgram, 0, "in_Position");
-	linkProgram(clothProgram);
-}
-void cleanupClothMesh() {
-	glDeleteBuffers(2, clothVbo);
-	glDeleteVertexArrays(1, &clothVao);
-
-	glDeleteProgram(clothProgram);
-	glDeleteShader(clothShaders[0]);
-	glDeleteShader(clothShaders[1]);
-}
-void updateClothMesh(float *array_data) {
-	glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
-	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	for (int i = 0; i < 3 * numVerts; ++i) {
-		buff[i] = array_data[i];
+		glDeleteProgram(clothProgram);
+		glDeleteShader(clothShaders[0]);
+		glDeleteShader(clothShaders[1]);
 	}
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-void drawClothMesh() {
-	glEnable(GL_PRIMITIVE_RESTART);
-	glBindVertexArray(clothVao);
-	glUseProgram(clothProgram);
-	glUniformMatrix4fv(glGetUniformLocation(clothProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
-	glUniform4f(glGetUniformLocation(clothProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
-	glDrawElements(GL_LINE_LOOP, numVirtualVerts, GL_UNSIGNED_BYTE, 0);
+	void updateClothMesh(float *array_data) {
+		glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
+		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		for (int i = 0; i < 3 * numVerts; ++i) {
+			buff[i] = array_data[i];
+		}
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	void drawClothMesh() {
+		glEnable(GL_PRIMITIVE_RESTART);
+		glBindVertexArray(clothVao);
+		glUseProgram(clothProgram);
+		glUniformMatrix4fv(glGetUniformLocation(clothProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
+		glUniform4f(glGetUniformLocation(clothProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
+		glDrawElements(GL_LINE_LOOP, numVirtualVerts, GL_UNSIGNED_BYTE, 0);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glDisable(GL_PRIMITIVE_RESTART);
-}
+		glUseProgram(0);
+		glBindVertexArray(0);
+		glDisable(GL_PRIMITIVE_RESTART);
+	}
 }
 
 ////////////////////////////////////////////////// CUBE
@@ -851,14 +845,14 @@ namespace Cube {
 	extern const float halfW = 0.5f;
 	int numVerts = 24 + 6; // 4 vertex/face * 6 faces + 6 PRIMITIVE RESTART
 
-	//   4---------7
-	//  /|        /|
-	// / |       / |
-	//5---------6  |
-	//|  0------|--3
-	//| /       | /
-	//|/        |/
-	//1---------2
+						   //   4---------7
+						   //  /|        /|
+						   // / |       / |
+						   //5---------6  |
+						   //|  0------|--3
+						   //| /       | /
+						   //|/        |/
+						   //1---------2
 	glm::vec3 verts[] = {
 		glm::vec3(-halfW, -halfW, -halfW),
 		glm::vec3(-halfW, -halfW,  halfW),
@@ -869,6 +863,7 @@ namespace Cube {
 		glm::vec3(halfW,  halfW,  halfW),
 		glm::vec3(halfW,  halfW, -halfW)
 	};
+
 	glm::vec3 norms[] = {
 		glm::vec3(0.f, -1.f,  0.f),
 		glm::vec3(0.f,  1.f,  0.f),
@@ -886,6 +881,7 @@ namespace Cube {
 		verts[0], verts[4], verts[3], verts[7],
 		verts[1], verts[2], verts[5], verts[6]
 	};
+
 	glm::vec3 cubeNorms[] = {
 		norms[0], norms[0], norms[0], norms[0],
 		norms[1], norms[1], norms[1], norms[1],
@@ -894,6 +890,7 @@ namespace Cube {
 		norms[4], norms[4], norms[4], norms[4],
 		norms[5], norms[5], norms[5], norms[5]
 	};
+
 	GLubyte cubeIdx[] = {
 		0, 1, 2, 3, UCHAR_MAX,
 		4, 5, 6, 7, UCHAR_MAX,
@@ -904,31 +901,28 @@ namespace Cube {
 	};
 
 	const char* cube_vertShader =
-	"#version 330\n\
+		"#version 330\n\
 	in vec3 in_Position;\n\
+	in vec3 in_Normal;\n\
+	out vec4 vert_Normal;\n\
+	uniform mat4 objMat;\n\
+	uniform mat4 mv_Mat;\n\
 	uniform mat4 mvpMat;\n\
-	uniform float currentTime;\n\
-	out float xcolor;\n\
 	void main() {\n\
-		vec3 temp = in_Position;\n\
-		temp.x = temp.x + 4*sin(currentTime);\n\
-		gl_Position = mvpMat * vec4(temp, 1.0);\n\
-		xcolor = min(gl_Position.x, 1.0);\n\
-		xcolor = max(gl_Position.x, 0.0);\n\
+		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
+		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
 	}";
+
 
 	const char* cube_fragShader =
-	"#version 330\n\
-	out vec4 out_Color;\n\
-	uniform vec4 color;\n\
-	uniform vec4 ambient;\n\
-	in float xcolor;\n\
-	void main() {\n\
-		vec3 rgb = min(color.rgb, vec3(1.0));\n\
-		rgb.r = xcolor;\n\
-		out_Color = vec4(rgb.xyz, 1.0);\n\
-	}";
-
+		"#version 330\n\
+in vec4 vert_Normal;\n\
+out vec4 out_Color;\n\
+uniform mat4 mv_Mat;\n\
+uniform vec4 color;\n\
+void main() {\n\
+	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+}";
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
 		glBindVertexArray(cubeVao);
@@ -973,25 +967,63 @@ namespace Cube {
 	void updateCube(const glm::mat4& transform) {
 		objMat = transform;
 	}
-	void drawCube(double currentTime) {
+	void drawCube() {
 		glEnable(GL_PRIMITIVE_RESTART);
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
-
-		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.f, 0.f, 1.f, 0.f);
-		//glUniform4f(glGetUniformLocation(cubeProgram, "ambient"), 0.5f + 0.5f*sin(currentTime), 0.5f + 0.5f*sin(currentTime), 0.5f + 0.5f*sin(currentTime), 0.f);
-		glUniform4f(glGetUniformLocation(cubeProgram, "ambient"), 1.f, 1.f, 1.f, 0.f);
-		glUniform1f(glGetUniformLocation(cubeProgram, "currentTime"), (GLfloat)currentTime);
-
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
-	
+
 		glUseProgram(0);
 		glBindVertexArray(0);
 		glDisable(GL_PRIMITIVE_RESTART);
 	}
+}
 
+namespace myObjShader {
+	GLuint objVao;
+	GLuint objVbo[3];
+	GLuint objShaders[2];
+	GLuint objProgram;
+	glm::mat4 objMat = glm::mat4(1.f);
+	const char* obj_vertShader =
+		"#version 330\n\
+	in vec3 in_Position;\n\
+	in vec3 in_Normal;\n\
+	out vec4 vert_Normal;\n\
+	uniform mat4 objMat;\n\
+	uniform mat4 mv_Mat;\n\
+	uniform mat4 mvpMat;\n\
+	void main() {\n\
+		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
+		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
+	}";
 
+	const char* obj_fragShader =
+		"#version 330\n\
+in vec4 vert_Normal;\n\
+out vec4 out_Color;\n\
+uniform mat4 mv_Mat;\n\
+uniform vec4 color;\n\
+void main() {\n\
+	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+}";
+
+	void initObj(glm::vec3 vertices, glm::vec2 uvs, glm::vec3 normals) {
+		glGenBuffers(3, objVbo);
+		glBindBuffer(GL_ARRAY_BUFFER, objVbo[0]);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	}
+
+	void drawObj(glm::vec3 vertices, glm::vec2 uvs, glm::vec3 normals) {
+
+	}
+
+	void cleanupObj() {
+
+	}
 }
