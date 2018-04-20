@@ -7,11 +7,23 @@
 #include "GL_framework.h"
 #include <vector>
 
-std::vector< glm::vec3> vertices;
-std::vector< glm::vec2> uvs;
-std::vector< glm::vec3> normals;
 
-extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals); 
+//variables to load an object:
+
+std::vector< glm::vec3 > vertices;
+std::vector< glm::vec2 > uvs;
+std::vector< glm::vec3 > normals;
+
+
+
+extern bool loadOBJ(const char * path,
+	std::vector < glm::vec3 > & out_vertices,
+	std::vector < glm::vec2 > & out_uvs,
+	std::vector < glm::vec3 > & out_normals
+);
+
+
+
 
 ///////// fw decl
 namespace ImGui {
@@ -34,6 +46,10 @@ namespace Cube {
 	void updateCube(const glm::mat4& transform);
 	void drawCube();
 }
+
+
+
+
 
 
 ////////////////
@@ -106,18 +122,27 @@ void GLinit(int width, int height) {
 	// Setup shaders & geometry
 	/*Box::setupCube();
 	Axis::setupAxis();*/
-	//Cube::setupCube();
 
-	// Read our .obj file
 	bool res = loadOBJ("cube.obj", vertices, uvs, normals);
+
+	Cube::setupCube();
+
+
+
+
+
+
+
 
 }
 
 void GLcleanup() {
 	/*Box::cleanupCube();
 	Axis::cleanupAxis();*/
-	//Cube::cleanupCube();
-	
+	Cube::cleanupCube();
+
+
+
 }
 
 void GLrender(double currentTime) {
@@ -133,9 +158,9 @@ void GLrender(double currentTime) {
 	// render code
 	/*Box::drawCube();
 	Axis::drawAxis();*/
-	//Cube::drawCube();
+	Cube::drawCube();
 
-		
+
 
 	ImGui::Render();
 }
@@ -778,10 +803,10 @@ void main() {\n\
 		GLubyte facesIdx[facesVertsIdx] = { 0 };
 		for (int i = 0; i < (numRows - 1); ++i) {
 			for (int j = 0; j < (numCols - 1); ++j) {
-				facesIdx[5 * (i*(numCols - 1) + j) + 0] = i * numCols + j;
+				facesIdx[5 * (i*(numCols - 1) + j) + 0] = i*numCols + j;
 				facesIdx[5 * (i*(numCols - 1) + j) + 1] = (i + 1)*numCols + j;
 				facesIdx[5 * (i*(numCols - 1) + j) + 2] = (i + 1)*numCols + (j + 1);
-				facesIdx[5 * (i*(numCols - 1) + j) + 3] = i * numCols + (j + 1);
+				facesIdx[5 * (i*(numCols - 1) + j) + 3] = i*numCols + (j + 1);
 				facesIdx[5 * (i*(numCols - 1) + j) + 4] = UCHAR_MAX;
 			}
 		}
@@ -863,7 +888,6 @@ namespace Cube {
 		glm::vec3(halfW,  halfW,  halfW),
 		glm::vec3(halfW,  halfW, -halfW)
 	};
-
 	glm::vec3 norms[] = {
 		glm::vec3(0.f, -1.f,  0.f),
 		glm::vec3(0.f,  1.f,  0.f),
@@ -881,7 +905,6 @@ namespace Cube {
 		verts[0], verts[4], verts[3], verts[7],
 		verts[1], verts[2], verts[5], verts[6]
 	};
-
 	glm::vec3 cubeNorms[] = {
 		norms[0], norms[0], norms[0], norms[0],
 		norms[1], norms[1], norms[1], norms[1],
@@ -890,7 +913,6 @@ namespace Cube {
 		norms[4], norms[4], norms[4], norms[4],
 		norms[5], norms[5], norms[5], norms[5]
 	};
-
 	GLubyte cubeIdx[] = {
 		0, 1, 2, 3, UCHAR_MAX,
 		4, 5, 6, 7, UCHAR_MAX,
@@ -899,6 +921,9 @@ namespace Cube {
 		16, 17, 18, 19, UCHAR_MAX,
 		20, 21, 22, 23, UCHAR_MAX
 	};
+
+
+
 
 	const char* cube_vertShader =
 		"#version 330\n\
@@ -929,18 +954,20 @@ void main() {\n\
 		glGenBuffers(3, cubeVbo);
 
 		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerts), cubeVerts, GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerts), cubeVerts, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[1]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeNorms), cubeNorms, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 		glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(1);
 
-		glPrimitiveRestartIndex(UCHAR_MAX);
+		/*	glPrimitiveRestartIndex(UCHAR_MAX);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeVbo[2]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIdx), cubeIdx, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIdx), cubeIdx, GL_STATIC_DRAW);*/
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -957,7 +984,8 @@ void main() {\n\
 		linkProgram(cubeProgram);
 	}
 	void cleanupCube() {
-		glDeleteBuffers(3, cubeVbo);
+		//glDeleteBuffers(3, cubeVbo);
+		glDeleteBuffers(2, cubeVbo);
 		glDeleteVertexArrays(1, &cubeVao);
 
 		glDeleteProgram(cubeProgram);
@@ -968,62 +996,21 @@ void main() {\n\
 		objMat = transform;
 	}
 	void drawCube() {
-		glEnable(GL_PRIMITIVE_RESTART);
+		//glEnable(GL_PRIMITIVE_RESTART);
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
-		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+		//glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
 
 		glUseProgram(0);
 		glBindVertexArray(0);
-		glDisable(GL_PRIMITIVE_RESTART);
-	}
-}
-
-namespace myObjShader {
-	GLuint objVao;
-	GLuint objVbo[3];
-	GLuint objShaders[2];
-	GLuint objProgram;
-	glm::mat4 objMat = glm::mat4(1.f);
-	const char* obj_vertShader =
-		"#version 330\n\
-	in vec3 in_Position;\n\
-	in vec3 in_Normal;\n\
-	out vec4 vert_Normal;\n\
-	uniform mat4 objMat;\n\
-	uniform mat4 mv_Mat;\n\
-	uniform mat4 mvpMat;\n\
-	void main() {\n\
-		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
-		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
-	}";
-
-	const char* obj_fragShader =
-		"#version 330\n\
-in vec4 vert_Normal;\n\
-out vec4 out_Color;\n\
-uniform mat4 mv_Mat;\n\
-uniform vec4 color;\n\
-void main() {\n\
-	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
-}";
-
-	void initObj(glm::vec3 vertices, glm::vec2 uvs, glm::vec3 normals) {
-		glGenBuffers(3, objVbo);
-		glBindBuffer(GL_ARRAY_BUFFER, objVbo[0]);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		//glDisable(GL_PRIMITIVE_RESTART);
 	}
 
-	void drawObj(glm::vec3 vertices, glm::vec2 uvs, glm::vec3 normals) {
 
-	}
-
-	void cleanupObj() {
-
-	}
 }
