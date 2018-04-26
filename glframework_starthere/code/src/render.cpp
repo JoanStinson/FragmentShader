@@ -160,7 +160,7 @@ void GLinit(int width, int height) {
 	/*Box::setupCube();
 	Axis::setupAxis();*/
 
-	bool res = loadOBJ("interceptor.obj", vertices, uvs, normals);
+	bool res = loadOBJ("chicken.obj", vertices, uvs, normals);
 
 	MyLoadedModel::setupModel();
 
@@ -938,7 +938,7 @@ out vec4 out_Color;\n\
 uniform mat4 mv_Mat;\n\
 uniform vec4 color;\n\
 void main() {\n\
-	float u = dot(vert_Normal, mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
+	float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
 	if (u < 0.2) u = 0; \n\
 	if (u >= 0.2 && u < 0.4) u = 0.2;\n\
 	if (u >= 0.4 && u < 0.5) u = 0.4;\n\
@@ -992,13 +992,17 @@ void main() {\n\
 	}
 	void drawModel() {
 
+		// Scale
+		glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.02f, 0.02f, 0.02f));
+		objMat = scale;
 		glBindVertexArray(modelVao);
 		glUseProgram(modelProgram);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
-		glUniform4f(glGetUniformLocation(modelProgram, "color"), 0.5f, .5f, 1.f, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram, "color"), 1.f, 0.f, 0.f, 0.f);
+
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
