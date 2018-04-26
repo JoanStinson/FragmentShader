@@ -92,7 +92,7 @@ namespace Sphere {
 ////////////////
 
 namespace RenderVars {
-	const float FOV = glm::radians(65.f);
+	const float FOV = glm::radians(35.f);
 	const float zNear = 1.f;
 	const float zFar = 500.f;
 
@@ -108,8 +108,8 @@ namespace RenderVars {
 		bool waspressed = false;
 	} prevMouse;
 
-	float panv[3] = { 0.f, -20.f, -50.f };
-	float rota[2] = { 0.f, 0.f };
+	float panv[3] = { 0.f, -7.f, -50.f };
+	float rota[2] = { 50.f, 0.f };
 }
 namespace RV = RenderVars;
 
@@ -199,7 +199,7 @@ void GLrender(double currentTime) {
 	Axis::drawAxis();*/
 
 	if (light_moves)
-		lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
+		lightPos = glm::vec3(10 * cos((float)currentTime), 10 * sin((float)currentTime), 0);
 
 	Sphere::updateSphere(lightPos, 1.0f);
 	Sphere::drawSphere();
