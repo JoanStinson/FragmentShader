@@ -30,10 +30,7 @@ bool CheckClickOption() {
 
 void SetActiveExercise(int num) {
 	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
-		if (i == num) {
-			exercise[i] = true;
-			std::cout << i << std::endl;
-		}
+		if (i == num) exercise[i] = true;
 		else exercise[i] = false;
 	}
 }
@@ -112,7 +109,7 @@ namespace MyLoadedModel {
 ////////////////
 
 namespace RenderVars {
-	const float FOV = glm::radians(35.f);
+	const float FOV = glm::radians(65.f);
 	const float zNear = 1.f;
 	const float zFar = 500.f;
 
@@ -128,8 +125,8 @@ namespace RenderVars {
 		bool waspressed = false;
 	} prevMouse;
 
-	float panv[3] = { 0.f, -7.f, -50.f };
-	float rota[2] = { 50.f, 0.f };
+	float panv[3] = { 0.f, -5.f, -15.f };
+	float rota[2] = { 0.f, 0.f };
 }
 namespace RV = RenderVars;
 
@@ -209,13 +206,20 @@ void GLrender(double currentTime) {
 
 		if (exercise[1]) {
 			Cube::drawCube(currentTime);
+			Cube::drawCube(currentTime);
+			RV::panv[2] = -30.f;
+			RV::panv[1] = 0.4f;
+			//std::cout << RV::panv[1] << std::endl;
 		}
 
 		else if (exercise[2]) {
-			if (light_moves)
-				lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
+			RV::panv[2] = -60.f;
+			RV::panv[1] = 0.4f;
 
 			MyLoadedModel::drawModel();
+
+			if (light_moves)
+				lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
 
 			Sphere::updateSphere(lightPos, 1.0f);
 			Sphere::drawSphere();
@@ -243,7 +247,6 @@ GLuint compileShader(const char* shaderStr, GLenum shaderType, const char* name 
 	}
 	return shader;
 }
-
 void linkProgram(GLuint program) {
 	glLinkProgram(program);
 	GLint res;
@@ -986,7 +989,7 @@ namespace Cube {
 	};
 
 	const char* cube_vertShader =
-		"#version 330\n\
+	"#version 330\n\
 	in vec3 in_Position;\n\
 	in vec3 in_Normal;\n\
 	out vec4 vert_Normal;\n\
@@ -998,16 +1001,16 @@ namespace Cube {
 		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
 	}";
 
-
 	const char* cube_fragShader =
-		"#version 330\n\
-in vec4 vert_Normal;\n\
-out vec4 out_Color;\n\
-uniform mat4 mv_Mat;\n\
-uniform vec4 color;\n\
-void main() {\n\
-	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
-}";
+	"#version 330\n\
+	in vec4 vert_Normal;\n\
+	out vec4 out_Color;\n\
+	uniform mat4 mv_Mat;\n\
+	uniform vec4 color;\n\
+	void main() {\n\
+		out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+	}";
+
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
 		glBindVertexArray(cubeVao);
@@ -1041,6 +1044,7 @@ void main() {\n\
 		glBindAttribLocation(cubeProgram, 1, "in_Normal");
 		linkProgram(cubeProgram);
 	}
+
 	void cleanupCube() {
 		glDeleteBuffers(3, cubeVbo);
 		glDeleteVertexArrays(1, &cubeVao);
@@ -1049,11 +1053,13 @@ void main() {\n\
 		glDeleteShader(cubeShaders[0]);
 		glDeleteShader(cubeShaders[1]);
 	}
+
 	void updateCube(const glm::mat4& transform) {
 		objMat = transform;
 	}
+
 	void drawCube(double currentTime) {
-		glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(20 * cos((float)currentTime), 20 * sin((float)currentTime), 0.f));
+		glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(15.f * cos((float)currentTime), 15.f * sin((float)currentTime), 1.f));
 		objMat = trans;
 
 		glEnable(GL_PRIMITIVE_RESTART);
