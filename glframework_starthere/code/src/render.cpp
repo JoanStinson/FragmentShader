@@ -40,11 +40,18 @@ namespace Axis {
 	void drawAxis();
 }
 
+namespace Sphere {
+	void setupSphere(glm::vec3 pos, float radius);
+	void cleanupSphere();
+	void updateSphere(glm::vec3 pos, float radius);
+	void drawSphere();
+}
+
 namespace Cube {
 	void setupCube();
 	void cleanupCube();
 	void updateCube(const glm::mat4& transform);
-	void drawCube();
+	void drawCube(glm::vec3 pos);
 }
 
 
@@ -123,9 +130,10 @@ void GLinit(int width, int height) {
 	/*Box::setupCube();
 	Axis::setupAxis();*/
 
-	bool res = loadOBJ("cube.obj", vertices, uvs, normals);
+	bool res = loadOBJ("interceptor.obj", vertices, uvs, normals);
 
 	Cube::setupCube();
+	Sphere::setupSphere(glm::vec3 (6.f, 8.f, 1.f), 1.f);
 
 
 
@@ -140,6 +148,7 @@ void GLcleanup() {
 	/*Box::cleanupCube();
 	Axis::cleanupAxis();*/
 	Cube::cleanupCube();
+	Sphere::cleanupSphere();
 
 
 
@@ -158,9 +167,12 @@ void GLrender(double currentTime) {
 	// render code
 	/*Box::drawCube();
 	Axis::drawAxis();*/
-	Cube::drawCube();
+	glm::vec3 lightPos = glm::vec3(5.f*sin(currentTime), 8.f, 1.f);
 
+	Sphere::updateSphere(lightPos, 1.f);
+	Sphere::drawSphere();
 
+	Cube::drawCube(lightPos);
 
 	ImGui::Render();
 }
@@ -447,7 +459,8 @@ void main() {\n\
 	vec4 nuPos = projMat * nuEyePos;\n\
 	gl_FragDepth = ((nuPos.z / nuPos.w) + 1) * 0.5;\n\
 	vec3 normal = normalize(nuEyePos - centerEyePos).xyz;\n\
-	out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
+	//out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
+	out_Color = vec4(color.xyz, 1.0 );\n\
 }";
 
 	bool shadersCreated = false;
@@ -514,7 +527,7 @@ void main() {\n\
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
-		glUniform4f(glGetUniformLocation(sphereProgram, "color"), 0.6f, 0.1f, 0.1f, 1.f);
+		glUniform4f(glGetUniformLocation(sphereProgram, "color"), 1.f, 1.f, 0.f, 1.f);
 		glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
 		glDrawArrays(GL_POINTS, 0, 1);
 
@@ -945,8 +958,10 @@ in vec4 vert_Normal;\n\
 out vec4 out_Color;\n\
 uniform mat4 mv_Mat;\n\
 uniform vec4 color;\n\
+uniform vec3 lightPos;\n\
 void main() {\n\
-	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+	//out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * lightPos.x, 1.0 );\n\
 }";
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
@@ -995,7 +1010,7 @@ void main() {\n\
 	void updateCube(const glm::mat4& transform) {
 		objMat = transform;
 	}
-	void drawCube() {
+	void drawCube(glm::vec3 pos) {
 		//glEnable(GL_PRIMITIVE_RESTART);
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
@@ -1003,8 +1018,9 @@ void main() {\n\
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 1.f, 1.f, 0.f);
+		glUniform3f(glGetUniformLocation(cubeProgram, "lightPos"), pos.x, pos.y, pos.z);
 		//glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 
 		glUseProgram(0);
