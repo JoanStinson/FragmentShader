@@ -30,22 +30,16 @@
     <ClCompile Include="include\imgui\imgui_draw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\physics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\render_prims.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\imgui\imgui_impl_sdl_gl3.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="my_render_code.cpp">
+    <ClCompile Include="src\load_obj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\load_obj.cpp">
+    <ClCompile Include="src\my_render_code.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,46 +3,59 @@
 #include <glm\gtc\matrix_transform.hpp>
 #include <cstdio>
 #include <cassert>
-
 #include "GL_framework.h"
 #include <vector>
-
 #include <imgui\imgui.h>
 #include <imgui\imgui_impl_sdl_gl3.h>
+#include <iostream>
+
 //variables to load an object:
-
-std::vector< glm::vec3 > vertices;
-std::vector< glm::vec2 > uvs;
-std::vector< glm::vec3 > normals;
-
+std::vector <glm::vec3> vertices;
+std::vector <glm::vec2> uvs;
+std::vector <glm::vec3> normals;
+extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals);
 
 glm::vec3 lightPos;
-
-
-extern bool loadOBJ(const char * path,
-	std::vector < glm::vec3 > & out_vertices,
-	std::vector < glm::vec2 > & out_uvs,
-	std::vector < glm::vec3 > & out_normals
-);
-
-
-
 bool show_test_window = false;
-
-
 bool light_moves = true;
+int const NUMBER_EXERCISES = 19;
+bool exercise[NUMBER_EXERCISES];
+
+bool CheckClickOption() {
+	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++)
+		if (exercise[i]) return true;
+
+	return false;
+}
+
+void SetActiveExercise(int num) {
+	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
+		if (i == num) {
+			exercise[i] = true;
+			std::cout << i << std::endl;
+		}
+		else exercise[i] = false;
+	}
+}
+
 void GUI() {
 	bool show = true;
-	ImGui::Begin("Simulation Parameters", &show, 0);
+	ImGui::Begin("Welcome!", &show, 0);
 
 	// Do your GUI code here....
 	{
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
+		
+		// Selecció d'exercici
+		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11", "Exercise 12", "Exercise 13", "Exercise 14", "Exercise 15", "Exercise 16", "Exercise 17" };
+		static int listbox_item_current = -1, listbox_item_current2 = -1;
+		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
+		ImGui::PushItemWidth(-1);
+		ImGui::PopItemWidth();
+		SetActiveExercise(listbox_item_current + 1);
 
 		if (ImGui::Button("Toggle Light Move")) {
 			light_moves = !light_moves;
-
 		}
 
 
@@ -62,27 +75,17 @@ void GUI() {
 namespace ImGui {
 	void Render();
 }
+
 namespace Box {
 	void setupCube();
 	void cleanupCube();
 	void drawCube();
 }
+
 namespace Axis {
 	void setupAxis();
 	void cleanupAxis();
 	void drawAxis();
-}
-namespace Cube {
-	void setupCube();
-	void cleanupCube();
-	void updateCube(const glm::mat4& transform);
-	void drawCube(double currentTime);
-}
-namespace MyLoadedModel {
-	void setupModel();
-	void cleanupModel();
-	void updateModel(const glm::mat4& transform);
-	void drawModel();
 }
 
 namespace Sphere {
@@ -92,7 +95,19 @@ namespace Sphere {
 	void drawSphere();
 }
 
+namespace Cube {
+	void setupCube();
+	void cleanupCube();
+	void updateCube(const glm::mat4& transform);
+	void drawCube(double currentTime);
+}
 
+namespace MyLoadedModel {
+	void setupModel();
+	void cleanupModel();
+	void updateModel(const glm::mat4& transform);
+	void drawModel();
+}
 
 ////////////////
 
@@ -162,31 +177,21 @@ void GLinit(int width, int height) {
 	RV::_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
 
 	// Setup shaders & geometry
-	/*Box::setupCube();
-	Axis::setupAxis();*/
+	Cube::setupCube();
 
 	bool res = loadOBJ("cabin.obj", vertices, uvs, normals);
 	bool res2 = loadOBJ("chicken.obj", vertices, uvs, normals);
-
 	MyLoadedModel::setupModel();
-
 	lightPos = glm::vec3(40, 40, 0);
 
 	Sphere::setupSphere(lightPos, 1.0f);
-
-	Cube::setupCube();
-
-
 
 }
 
 void GLcleanup() {
 	Cube::cleanupCube();
-	/*Axis::cleanupAxis();*/
 	MyLoadedModel::cleanupModel();
 	Sphere::cleanupSphere();
-
-
 }
 
 void GLrender(double currentTime) {
@@ -199,22 +204,26 @@ void GLrender(double currentTime) {
 
 	RV::_MVP = RV::_projection * RV::_modelView;
 
-	// render code
-	Cube::drawCube(currentTime);
-	/*Axis::drawAxis();*/
+	// Render code
+	if (CheckClickOption) {
 
-	if (light_moves)
-		lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
+		if (exercise[1]) {
+			Cube::drawCube(currentTime);
+		}
 
-	Sphere::updateSphere(lightPos, 1.0f);
-	Sphere::drawSphere();
-	MyLoadedModel::drawModel();
+		else if (exercise[2]) {
+			if (light_moves)
+				lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
 
+			MyLoadedModel::drawModel();
 
+			Sphere::updateSphere(lightPos, 1.0f);
+			Sphere::drawSphere();
+		}
+	}
 
 	ImGui::Render();
 }
-
 
 //////////////////////////////////// COMPILE AND LINK
 GLuint compileShader(const char* shaderStr, GLenum shaderType, const char* name = "") {
@@ -234,6 +243,7 @@ GLuint compileShader(const char* shaderStr, GLenum shaderType, const char* name 
 	}
 	return shader;
 }
+
 void linkProgram(GLuint program) {
 	glLinkProgram(program);
 	GLint res;
@@ -1069,10 +1079,8 @@ namespace MyLoadedModel {
 	GLuint modelProgram;
 	glm::mat4 objMat = glm::mat4(1.f);
 
-
-
 	const char* model_vertShader =
-		"#version 330\n\
+	"#version 330\n\
 	in vec3 in_Position;\n\
 	in vec3 in_Normal;\n\
 	uniform vec3 lPos;\n\
@@ -1087,22 +1095,22 @@ namespace MyLoadedModel {
 		lDir = normalize(lPos - gl_Position.xyz);\n\
 	}";
 
-
 	const char* model_fragShader =
-		"#version 330\n\
-in vec4 vert_Normal;\n\
-in vec3 lDir;\n\
-out vec4 out_Color;\n\
-uniform mat4 mv_Mat;\n\
-uniform vec4 color;\n\
-void main() {\n\
-	float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
-	if (u < 0.2) u = 0; \n\
-	if (u >= 0.2 && u < 0.4) u = 0.2;\n\
-	if (u >= 0.4 && u < 0.5) u = 0.4;\n\
-	if (u >= 0.5) u = 1;\n\
-	out_Color = vec4(color.xyz * u , 1.0 );\n\
-}";
+	"#version 330\n\
+	in vec4 vert_Normal;\n\
+	in vec3 lDir;\n\
+	out vec4 out_Color;\n\
+	uniform mat4 mv_Mat;\n\
+	uniform vec4 color;\n\
+	void main() {\n\
+		float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
+		if (u < 0.2) u = 0; \n\
+		else if (u >= 0.2 && u < 0.4) u = 0.2;\n\
+		else if (u >= 0.4 && u < 0.5) u = 0.4;\n\
+		else if (u >= 0.5) u = 1;\n\
+		out_Color = vec4(color.xyz * u , 1.0 );\n\
+	}";
+
 	void setupModel() {
 		glGenVertexArrays(1, &modelVao);
 		glBindVertexArray(modelVao);
@@ -1120,8 +1128,6 @@ void main() {\n\
 		glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(1);
 
-
-
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1136,6 +1142,7 @@ void main() {\n\
 		glBindAttribLocation(modelProgram, 1, "in_Normal");
 		linkProgram(modelProgram);
 	}
+
 	void cleanupModel() {
 
 		glDeleteBuffers(2, modelVbo);
@@ -1145,14 +1152,17 @@ void main() {\n\
 		glDeleteShader(modelShaders[0]);
 		glDeleteShader(modelShaders[1]);
 	}
+
 	void updateModel(const glm::mat4& transform) {
 		objMat = transform;
 	}
+
 	void drawModel() {
 
 		// Scale
 		glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.02f, 0.02f, 0.02f));
 		objMat = scale;
+
 		glBindVertexArray(modelVao);
 		glUseProgram(modelProgram);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
@@ -1161,14 +1171,10 @@ void main() {\n\
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform4f(glGetUniformLocation(modelProgram, "color"), 1.f, 0.f, 0.f, 0.f);
 
-
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
 
 		glUseProgram(0);
 		glBindVertexArray(0);
-
 	}
-
 
 }

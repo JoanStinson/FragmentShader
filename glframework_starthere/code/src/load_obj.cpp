@@ -1,21 +1,15 @@
-// Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-
 #include <glm\gtc\type_ptr.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 
+bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals) {
 
-bool loadOBJ(const char * path,
-	std::vector < glm::vec3 > & out_vertices,
-	std::vector < glm::vec2 > & out_uvs,
-	std::vector < glm::vec3 > & out_normals
-) {
-	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
-	std::vector< glm::vec3 > temp_vertices;
-	std::vector< glm::vec2 > temp_uvs;
-	std::vector< glm::vec3 > temp_normals;
+	std::vector <unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector <glm::vec3> temp_vertices;
+	std::vector <glm::vec2> temp_uvs;
+	std::vector <glm::vec3> temp_normals;
 
 	FILE * file = fopen(path, "r");
 	if (file == NULL) {
@@ -64,17 +58,9 @@ bool loadOBJ(const char * path,
 			normalIndices.push_back(normalIndex[1]);
 			normalIndices.push_back(normalIndex[2]);
 		}
-
-
-
-
-
-
 	}
 
 	// For each vertex of each triangle
-
-
 	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
 		unsigned int vertexIndex = vertexIndices[i];
 		glm::vec3 vertex = temp_vertices[vertexIndex - 1];
@@ -87,10 +73,5 @@ bool loadOBJ(const char * path,
 		out_normals.push_back(normal);
 	}
 
-
-
 	return true;
 }
-
-
-
