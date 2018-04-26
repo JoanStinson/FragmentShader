@@ -172,7 +172,6 @@ void GLinit(int width, int height) {
 
 
 
-
 }
 
 void GLcleanup() {
@@ -199,7 +198,7 @@ void GLrender(double currentTime) {
 	Axis::drawAxis();*/
 
 	if (light_moves)
-		lightPos = glm::vec3(10 * cos((float)currentTime), 10 * sin((float)currentTime), 0);
+		lightPos = glm::vec3(20 * cos((float)currentTime), 20 * sin((float)currentTime), 0);
 
 	Sphere::updateSphere(lightPos, 1.0f);
 	Sphere::drawSphere();
@@ -927,7 +926,7 @@ namespace MyLoadedModel {
 	void main() {\n\
 		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
 		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
-		lDir = normalize(lPos - gl_Position.xyz );\n\
+		lDir = normalize(lPos - gl_Position.xyz);\n\
 	}";
 
 
@@ -939,7 +938,12 @@ out vec4 out_Color;\n\
 uniform mat4 mv_Mat;\n\
 uniform vec4 color;\n\
 void main() {\n\
-	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0)) , 1.0 );\n\
+	float u = dot(vert_Normal, mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
+	if (u < 0.2) u = 0; \n\
+	if (u >= 0.2 && u < 0.4) u = 0.2;\n\
+	if (u >= 0.4 && u < 0.5) u = 0.4;\n\
+	if (u >= 0.5) u = 1;\n\
+	out_Color = vec4(color.xyz * u , 1.0 );\n\
 }";
 	void setupModel() {
 		glGenVertexArrays(1, &modelVao);
