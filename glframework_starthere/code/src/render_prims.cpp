@@ -35,11 +35,11 @@ namespace ClothMesh {
 	extern void drawClothMesh();
 }
 
-namespace Cube {
-	extern void setupCube();
-	extern void cleanupCube();
-	extern void updateCube(const glm::mat4& transform);
-	extern void drawCube(double currentTime);
+namespace MyLoadedModel {
+	extern void setupModel();
+	extern void cleanupModel();
+	extern void updateModel(const glm::mat4& transform);
+	extern void drawModel();
 }
 
 void setupPrims() {
@@ -47,14 +47,14 @@ void setupPrims() {
 	Capsule::setupCapsule();
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
 	ClothMesh::setupClothMesh();
-	Cube::setupCube();
+	MyLoadedModel::setupModel();
 }
 void cleanupPrims() {
 	Sphere::cleanupSphere();
 	Capsule::cleanupCapsule();
 	LilSpheres::cleanupParticles();
 	ClothMesh::cleanupClothMesh();
-	Cube::cleanupCube();
+	MyLoadedModel::cleanupModel();
 }
 
 void renderPrims() {
@@ -70,10 +70,10 @@ void renderPrims() {
 		LilSpheres::drawParticles(startDrawingFromParticle, numParticlesToDraw);
 		// .............................................
 	}
-	
+
 	if (renderCloth)
 		ClothMesh::drawClothMesh();
 
-	/*if (renderCube)
-		Cube::drawCube();*/
+	if (renderCube)
+		MyLoadedModel::drawModel();
 }
