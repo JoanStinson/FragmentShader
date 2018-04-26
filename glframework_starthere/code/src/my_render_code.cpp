@@ -103,7 +103,7 @@ namespace MyLoadedModel {
 	void setupModel();
 	void cleanupModel();
 	void updateModel(const glm::mat4& transform);
-	void drawModel();
+	void drawModel(double currentTime);
 }
 
 ////////////////
@@ -177,10 +177,10 @@ void GLinit(int width, int height) {
 	Cube::setupCube();
 
 	bool res = loadOBJ("cabin.obj", vertices, uvs, normals);
-	bool res2 = loadOBJ("chicken.obj", vertices, uvs, normals);
+	//bool res2 = loadOBJ("chicken.obj", vertices, uvs, normals);
 	MyLoadedModel::setupModel();
-	lightPos = glm::vec3(40, 40, 0);
 
+	lightPos = glm::vec3(40, 40, 0);
 	Sphere::setupSphere(lightPos, 1.0f);
 
 }
@@ -205,26 +205,28 @@ void GLrender(double currentTime) {
 	if (CheckClickOption) {
 
 		if (exercise[1]) {
-			Cube::drawCube(currentTime);
-			Cube::drawCube(currentTime);
-			RV::panv[2] = -30.f;
 			RV::panv[1] = 0.4f;
-			//std::cout << RV::panv[1] << std::endl;
+			RV::panv[2] = -30.f;
+
+			for (unsigned int i = 0; i < 6; i++)
+				Cube::drawCube(currentTime+(float)i);
 		}
 
 		else if (exercise[2]) {
-			RV::panv[2] = -60.f;
 			RV::panv[1] = 0.4f;
+			RV::panv[2] = -60.f;
 
-			MyLoadedModel::drawModel();
-
-			if (light_moves)
-				lightPos = glm::vec3(40 * cos((float)currentTime), 40 * sin((float)currentTime), 0);
-
-			Sphere::updateSphere(lightPos, 1.0f);
-			Sphere::drawSphere();
+			for (unsigned int i = 0; i < 6; i++)
+				MyLoadedModel::drawModel(currentTime+(float)i);
 		}
+
 	}
+
+	/* Llum*/
+	//if (light_moves)
+	//	lightPos = glm::vec3(40.f * cos((float)currentTime), 40.f * sin((float)currentTime), 0.f);
+	//Sphere::updateSphere(lightPos, 1.0f);
+	//Sphere::drawSphere();
 
 	ImGui::Render();
 }
@@ -1163,11 +1165,11 @@ namespace MyLoadedModel {
 		objMat = transform;
 	}
 
-	void drawModel() {
+	void drawModel(double currentTime) {
 
-		// Scale
+		glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(30.f * cos((float)currentTime), 30.f * sin((float)currentTime), 1.f));
 		glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.02f, 0.02f, 0.02f));
-		objMat = scale;
+		objMat = trans * scale;
 
 		glBindVertexArray(modelVao);
 		glUseProgram(modelProgram);
