@@ -290,7 +290,7 @@ void GLrender(double currentTime) {
 			glm::vec4 myColor = glm::vec4(1.f, 0.f, 0.f, 0.f);
 
 			float f = 0.015f;
-			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(50.f, -60.f, 1.f));
+			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
 			glm::mat4 rot3 = glm::rotate(glm::mat4(), 1.f/*(float)sin(2 * 3.14*f*(float)currentTime)*/, glm::vec3(0.f, 0.f, 1.f));
 			glm::mat4 scale3 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
 			glm::mat4 myObjMat3 = trans3 * rot3 * scale3;
@@ -307,16 +307,16 @@ void GLrender(double currentTime) {
 					float xoffset = 1.f;
 					if (i == numcabin + 1) {
 						xoffset -= 3.f;
-						glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(80.f * cos(2 * 3.14*f*(float)currentTime + fase) + xoffset, 80.f * sin(2 * 3.14*f*(float)currentTime + fase) + yoffset, 1.f));
+						glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(78.5f * cos(2 * 3.14*f*(float)currentTime + fase) + xoffset, 78.5f * sin(2 * 3.14*f*(float)currentTime + fase) + yoffset, 1.f));
 						glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.005f, 0.005f, 0.005f));
 						glm::mat4 myObjMat = trans * scale;
 
 						//MyLoadedModel::updateModel3(myObjMat);
 						//MyLoadedModel::drawModel3(currentTime);
 					} 
-					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(80.f * cos(2 * 3.14*f*(float)currentTime + fase) + xoffset, 80.f * sin(2 * 3.14*f*(float)currentTime + fase) + yoffset, 1.f));
+					/*glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(78.f * cos(2 * 3.14*f*(float)currentTime + fase) + xoffset, 78.f * sin(2 * 3.14*f*(float)currentTime + fase) + yoffset, 1.f));
 					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.005f, 0.005f, 0.005f));
-					glm::mat4 myObjMat = trans * scale;
+					glm::mat4 myObjMat = trans * scale;*/
 
 					//TODO pintar trump
 					//MyLoadedModel::updateModel2(myObjMat);
@@ -326,7 +326,7 @@ void GLrender(double currentTime) {
 				else {
 					float f = 0.015f;
 					float fase = 2 * 3.14*i / numcabin;
-					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(80.f * cos(2 * 3.14*f*(float)currentTime + fase), 80.f * sin(2 * 3.14*f*(float)currentTime + fase), 1.f));
+					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(78.5f * cos(2 * 3.14*f*(float)currentTime + fase), 78.5f * sin(2 * 3.14*f*(float)currentTime + fase), 1.f));
 					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.01f, 0.01f, 0.01f));
 					glm::mat4 myObjMat = trans * scale;
 
