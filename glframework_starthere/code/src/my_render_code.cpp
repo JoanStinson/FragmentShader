@@ -22,6 +22,10 @@ std::vector <glm::vec3> vertices3;
 std::vector <glm::vec2> uvs3;
 std::vector <glm::vec3> normals3;
 
+std::vector <glm::vec3> vertices4;
+std::vector <glm::vec2> uvs4;
+std::vector <glm::vec3> normals4;
+
 extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals);
 
 glm::vec3 lightPos;
@@ -205,6 +209,7 @@ void GLinit(int width, int height) {
 	// Setup shaders & geometry
 	Cube::setupCube();
 
+	// Setup models
 	bool res = loadOBJ("cabin.obj", vertices, uvs, normals);
 	MyLoadedModel::setupModel();
 
@@ -213,6 +218,9 @@ void GLinit(int width, int height) {
 
 	bool res3 = loadOBJ("wheel.obj", vertices3, uvs3, normals3);
 	MyLoadedModel::setupModel3();
+
+	bool res4 = loadOBJ("feet.obj", vertices4, uvs4, normals4);
+	MyLoadedModel::setupModel4();
 
 	lightPos = glm::vec3(80.f, 100.f, 200.f);
 	Sphere::setupSphere(glm::vec3(1.f, 1.f, 1.f), 3.0f);
@@ -227,7 +235,7 @@ void GLcleanup() {
 	MyLoadedModel::cleanupModel();
 	Sphere::cleanupSphere();
 }
-
+float testval = 3.f;
 void GLrender(double currentTime) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -287,21 +295,33 @@ void GLrender(double currentTime) {
 			//RV::panv[1] = 0.4f;
 			//RV::panv[2] = -200.f;
 
-			glm::vec4 myColor = glm::vec4(1.f, 0.f, 0.f, 0.f);
+			glm::vec4 myColor = glm::vec4(1.f, 1.f, 1.f, 0.f);
 
 			float f = 0.015f;
+			testval += 0.003f;
+			if (testval >= 360)
+				testval = 0;
+
 			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
-			glm::mat4 rot3 = glm::rotate(glm::mat4(), 1.f/*(float)sin(2 * 3.14*f*(float)currentTime)*/, glm::vec3(0.f, 0.f, 1.f));
+			glm::mat4 rot3 = glm::rotate(glm::mat4(), (float)(2*3.14*f*currentTime), glm::vec3(0.f, 0.f, 1.f));
 			glm::mat4 scale3 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
 			glm::mat4 myObjMat3 = trans3 * rot3 * scale3;
 			MyLoadedModel::updateModel3(myObjMat3);
 			MyLoadedModel::drawModel3(currentTime);
 
+			//float f = 0.015f;
+			glm::mat4 trans4 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
+			glm::mat4 rot4 = glm::rotate(glm::mat4(), 157.f, glm::vec3(0.f, 1.f, 0.f));
+			glm::mat4 scale4 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
+			glm::mat4 myObjMat4 = trans4 * rot4 * scale4;
+			MyLoadedModel::updateModel4(myObjMat4);
+			MyLoadedModel::drawModel4(currentTime);
+
 			int numcabin = 20;
 			for (unsigned int i = 0; i < numcabin+2; i++) {
 				if (i >= numcabin) {
 					float j = 20;
-					float f = 0.015f;
+					//float f = 0.015f;
 					float fase = 2 * 3.14*j / numcabin;
 					float yoffset = -2.5f;
 					float xoffset = 1.f;
@@ -1424,9 +1444,76 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram3, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram3, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram3, "lPos"), lightPos.x, lightPos.y, lightPos.z);
-		glUniform4f(glGetUniformLocation(modelProgram3, "color"), 1.f, 0.f, 0.f, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram3, "color"), 1.f, 1.f, 1.f, 0.f);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
+
+	////////////////////////////////////////////////// 4º
+	GLuint modelVao4;
+	GLuint modelVbo4[3];
+	GLuint modelShaders4[2];
+	GLuint modelProgram4;
+	glm::mat4 objMat4 = glm::mat4(1.f);
+
+	void setupModel4() {
+		glGenVertexArrays(1, &modelVao4);
+		glBindVertexArray(modelVao4);
+		glGenBuffers(3, modelVbo4);
+
+		glBindBuffer(GL_ARRAY_BUFFER, modelVbo4[0]);
+
+		glBufferData(GL_ARRAY_BUFFER, vertices4.size() * sizeof(glm::vec3), &vertices4[0], GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, modelVbo4[1]);
+
+		glBufferData(GL_ARRAY_BUFFER, normals4.size() * sizeof(glm::vec3), &normals4[0], GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		modelShaders4[0] = compileShader(model_vertShader, GL_VERTEX_SHADER, "cubeVert");
+		modelShaders4[1] = compileShader(model_fragShader, GL_FRAGMENT_SHADER, "cubeFrag");
+
+		modelProgram4 = glCreateProgram();
+		glAttachShader(modelProgram4, modelShaders3[0]);
+		glAttachShader(modelProgram4, modelShaders3[1]);
+		glBindAttribLocation(modelProgram4, 0, "in_Position");
+		glBindAttribLocation(modelProgram4, 1, "in_Normal");
+		linkProgram(modelProgram4);
+	}
+
+	void cleanupModel4() {
+		glDeleteBuffers(2, modelVbo4);
+		glDeleteVertexArrays(1, &modelVao4);
+
+		glDeleteProgram(modelProgram4);
+		glDeleteShader(modelShaders4[0]);
+		glDeleteShader(modelShaders4[1]);
+	}
+
+	void updateModel4(const glm::mat4& transform) {
+		objMat4 = transform;
+	}
+
+	void drawModel4(double currentTime) {
+		glBindVertexArray(modelVao4);
+		glUseProgram(modelProgram4);
+		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat4));
+		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform3f(glGetUniformLocation(modelProgram4, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color"), 1.f, 1.f, 1.f, 0.f);
+
+		glDrawArrays(GL_TRIANGLES, 0, vertices4.size());
 
 		glUseProgram(0);
 		glBindVertexArray(0);
