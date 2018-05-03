@@ -16,7 +16,7 @@ std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
 
 extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals);
 
-// utils
+// variables
 glm::vec3 lightPos;
 bool show_test_window = false;
 bool light_moves = true;
@@ -24,6 +24,7 @@ int const NUMBER_EXERCISES = 19;
 bool exercise[NUMBER_EXERCISES];
 float testval = 3.f;
 
+// utils
 bool CheckClickOption() {
 	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++)
 		if (exercise[i]) return true;
@@ -38,6 +39,9 @@ void SetActiveExercise(int num) {
 	}
 }
 
+
+
+// GUI
 void GUI() {
 	bool show = true;
 	ImGui::Begin("Welcome!", &show, 0);
@@ -223,6 +227,15 @@ void GLcleanup() {
 	MyLoadedModel::cleanupModel5();
 }
 
+// Translate, rotate and scale all in one
+glm::mat4 Transform(glm::vec3 translate, float rotate, float scale) {
+	glm::mat4 t = glm::translate(glm::mat4(), translate);
+	glm::mat4 r = glm::rotate(glm::mat4(), rotate, glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 s = glm::scale(glm::mat4(), glm::vec3(scale, scale, scale));
+	glm::mat4 myObjMat = t * r * s;
+	return myObjMat;
+}
+float time = 0.f;
 void GLrender(double currentTime) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -230,8 +243,6 @@ void GLrender(double currentTime) {
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
-
-	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// Render code
 	if (CheckClickOption) {
@@ -241,6 +252,9 @@ void GLrender(double currentTime) {
 
 			// Camera rotated 30 degrees along the Y axis
 			RV::rota[0] = glm::radians(30.f);
+
+			RV::panv[1] = 0.4f;
+			RV::panv[2] = -153.5f;
 
 			// Circle centered on the X axis
 			Sphere::drawSphere();
@@ -288,6 +302,9 @@ void GLrender(double currentTime) {
 
 			// Camera rotated 30 degrees along the Y axis
 			RV::rota[0] = glm::radians(30.f);
+
+			RV::panv[1] = 0.4f;
+			RV::panv[2] = -153.5f;
 
 			// Draw chicken, trump & cabins
 			int numCabins = 20;
@@ -358,7 +375,97 @@ void GLrender(double currentTime) {
 			MyLoadedModel::updateModel4(myObjMat4);
 			MyLoadedModel::drawModel4(currentTime);
 		}
+
+		//////////////////////////////////// Exercici3
+		else if (exercise[3]) {
+
+			// Camera rotated 30 degrees along the Y axis
+			RV::rota[0] = glm::radians(30.f);
+
+			// Draw chicken, trump & cabins
+			int numCabins = 20;
+			float circleSize = 78.5;
+			float f = 0.015f;
+			float fase = 2 * 3.14*numCabins / numCabins;
+			float xoffset = 3.f, yoffset = -5.f;
+
+			time += currentTime;
+			std::cout << currentTime << std::endl;
+			if (time > 800)
+				time = 0.f;
+			if (time < 400) {
+				RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 0.5f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 4.5f, 0.5f),
+					glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 3.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 5.f, 1.f),
+					glm::vec3(0.f, 1.f, 0.f)); 
+			}
+			else if (time >= 400 && time <= 800) {
+				RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 3.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 3.5f, 0.5f),
+					glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset + 1.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 1.5f, 1.f),
+					glm::vec3(0.f, 1.f, 0.f));
+
+				
+			}
+
+			// Lookat Trump
+			
+
+			// Looat Chicken
+			
+
+			for (unsigned int i = 0; i < numCabins + 2; i++) {
+
+				if (i >= numCabins) {
+					
+					// Draw trump
+					if (i == numCabins + 1) {
+						xoffset = -1.f;
+						MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase) + xoffset+0.5f, circleSize*sin(2*3.14*f*(float)currentTime+fase) + yoffset, 1.f), 1.8f, 0.003f));
+						MyLoadedModel::drawModel5(currentTime);
+					}
+					// Draw chicken 
+					else {
+						xoffset = 1.f;
+						MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase) + xoffset+1.f, circleSize*sin(2*3.14*f*(float)currentTime+fase) + yoffset+1.1f, 1.f), -90.f, 0.003f));
+						MyLoadedModel::drawModel2(currentTime);
+					}
+				}
+				// Draw normal cabins
+				else {
+					float fase2 = 2 * 3.14*i / numCabins;
+					/*glm::mat4 trans = glm::translate(glm::mat4(), );
+					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.01f, 0.01f, 0.01f));
+					glm::mat4 myObjMat = trans * scale;*/
+
+					MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase2), circleSize*sin(2 * 3.14*f*(float)currentTime + fase2), 1.f), 0.f, 0.01f));
+					MyLoadedModel::drawModel(currentTime);
+				}
+			}
+
+			// Draw wheel
+			float f3 = 0.015f;
+			testval += 0.003f;
+			if (testval >= 360)
+				testval = 0;
+
+			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
+			glm::mat4 rot3 = glm::rotate(glm::mat4(), (float)(2 * 3.14*f3*currentTime), glm::vec3(0.f, 0.f, 1.f));
+			glm::mat4 scale3 = glm::scale(glm::mat4(), glm::vec3(0.015f, 0.015f, 0.015f));
+			glm::mat4 myObjMat3 = trans3 * rot3 * scale3;
+			MyLoadedModel::updateModel3(myObjMat3);
+			MyLoadedModel::drawModel3(currentTime);
+
+			// Draw feet
+			glm::mat4 trans4 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
+			glm::mat4 rot4 = glm::rotate(glm::mat4(), 157.f, glm::vec3(0.f, 1.f, 0.f));
+			glm::mat4 scale4 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
+			glm::mat4 myObjMat4 = trans4 * rot4 * scale4;
+			MyLoadedModel::updateModel4(myObjMat4);
+			MyLoadedModel::drawModel4(currentTime);
+		}
 	}
+
+	// Camera
+	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// Gui
 	ImGui::Render();
@@ -726,7 +833,7 @@ namespace MyLoadedModel {
 		out_Color = vec4(color.xyz * u , 1.0 );\n\
 	}";
 
-	////////////////////////////////////////////////// 1º Model
+	////////////////////////////////////////////////// 1º Model Cabin
 	#pragma region
 	void setupModel() {
 		glGenVertexArrays(1, &modelVao);
@@ -789,7 +896,7 @@ namespace MyLoadedModel {
 	}
 	#pragma endregion
 
-	////////////////////////////////////////////////// 2º Model
+	////////////////////////////////////////////////// 2º Model Chicken
 	#pragma region
 	void setupModel2() {
 		glGenVertexArrays(1, &modelVao2);
@@ -852,7 +959,7 @@ namespace MyLoadedModel {
 	}
 	#pragma endregion
 
-	////////////////////////////////////////////////// 3º Model
+	////////////////////////////////////////////////// 3º Model Wheel
 	#pragma region
 	void setupModel3() {
 		glGenVertexArrays(1, &modelVao3);
@@ -915,7 +1022,7 @@ namespace MyLoadedModel {
 	}
 	#pragma endregion
 
-	////////////////////////////////////////////////// 4º Model
+	////////////////////////////////////////////////// 4º Model Feet
 	#pragma region
 	void setupModel4() {
 		glGenVertexArrays(1, &modelVao4);
@@ -978,7 +1085,7 @@ namespace MyLoadedModel {
 	}
 	#pragma endregion
 
-	////////////////////////////////////////////////// 5º Model
+	////////////////////////////////////////////////// 5º Model Trump
 	#pragma region
 	void setupModel5() {
 		glGenVertexArrays(1, &modelVao5);
