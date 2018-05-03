@@ -4,27 +4,15 @@
 #include <imgui\imgui.h>
 #include <imgui\imgui_impl_sdl_gl3.h>
 #include <cstdio>
-
 #include "GL_framework.h"
 
-
-/*extern void PhysicsInit();
-extern void PhysicsUpdate(float dt);
-extern void PhysicsCleanup();*/
 extern void GUI();
-
 extern void GLmousecb(MouseEvent ev);
 extern void GLResize(int width, int height);
 extern void GLinit(int width, int height);
 extern void GLcleanup();
-extern void GLrender(double currentTime);
+extern void GLrender(float currentTime);
 
-
-extern void myRenderCode(double currentTime);
-//extern void myCleanupCode(void);
-//extern void myInitCode(void);
-
-//////
 namespace {
 	const int expected_fps = 30;
 	const double expected_frametime = 1.0 / expected_fps;
@@ -46,12 +34,14 @@ namespace {
 }
 
 int main(int argc, char** argv) {
+
 	//Init GLFW
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
 		SDL_Quit();
 		return -1;
 	}
+
 	// Create window
 	SDL_Window *mainwindow;
 	SDL_GLContext maincontext;
@@ -86,17 +76,12 @@ int main(int argc, char** argv) {
 
 	int display_w, display_h;
 	SDL_GL_GetDrawableSize(mainwindow, &display_w, &display_h);
+
 	// Init scene
 	GLinit(display_w, display_h);
-	//PhysicsInit();
-
-	//myInitCode();
-
 	
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(mainwindow);
-
-
 
 	bool quit_app = false;
 	while (!quit_app) {
@@ -118,9 +103,8 @@ int main(int argc, char** argv) {
 
 		ImGuiIO& io = ImGui::GetIO();
 		
-		
 		GUI();
-		//PhysicsUpdate((float)expected_frametime);
+
 		if(!io.WantCaptureMouse) {
 			MouseEvent ev = {io.MousePos.x, io.MousePos.y, 
 				(io.MouseDown[0] ? MouseEvent::Button::Left : 
@@ -130,20 +114,12 @@ int main(int argc, char** argv) {
 			GLmousecb(ev);
 		}
 
-
 		double currentTime = (double)SDL_GetTicks() / 1000.0;
-		GLrender(currentTime);
-		
-		//double currentTime = (double) SDL_GetTicks() / 1000.0;
-		//myRenderCode(currentTime);
-		
-
-
+		GLrender((float)currentTime);
+	
 		SDL_GL_SwapWindow(mainwindow);
 		waitforFrameEnd();
 	}
-
-	//myCleanupCode();
 
 	GLcleanup();
 

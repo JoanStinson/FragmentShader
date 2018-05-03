@@ -9,72 +9,6 @@
 #include <imgui\imgui_impl_sdl_gl3.h>
 #include <iostream>
 
-// variables to load an object:
-std::vector <glm::vec3> vertices, vertices2, vertices3, vertices4, vertices5;
-std::vector <glm::vec2> uvs, uvs2, uvs3, uvs4, uvs5;
-std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
-
-extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals);
-
-// variables
-glm::vec3 lightPos;
-bool show_test_window = false;
-bool light_moves = true;
-int const NUMBER_EXERCISES = 19;
-bool exercise[NUMBER_EXERCISES];
-float testval = 3.f;
-
-// utils
-bool CheckClickOption() {
-	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++)
-		if (exercise[i]) return true;
-
-	return false;
-}
-
-void SetActiveExercise(int num) {
-	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
-		if (i == num) exercise[i] = true;
-		else exercise[i] = false;
-	}
-}
-
-
-
-// GUI
-void GUI() {
-	bool show = true;
-	ImGui::Begin("Welcome!", &show, 0);
-
-	// Do your GUI code here....
-	{
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
-		
-		// Selecció d'exercici
-		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11", "Exercise 12", "Exercise 13", "Exercise 14", "Exercise 15", "Exercise 16", "Exercise 17" };
-		static int listbox_item_current = -1, listbox_item_current2 = -1;
-		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
-		ImGui::PushItemWidth(-1);
-		ImGui::PopItemWidth();
-		SetActiveExercise(listbox_item_current + 1);
-
-		if (ImGui::Button("Toggle Light Move")) {
-			light_moves = !light_moves;
-		}
-
-
-	}
-	// .........................
-
-	ImGui::End();
-
-	// Example code -- ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-	if (show_test_window) {
-		ImGui::SetNextWindowPos(ImVec2(650, 60), ImGuiSetCond_FirstUseEver);
-		ImGui::ShowTestWindow(&show_test_window);
-	}
-}
-
 ///////// fw decl
 namespace ImGui {
 	void Render();
@@ -121,7 +55,30 @@ namespace MyLoadedModel {
 	void drawModel5(double currentTime);
 }
 
-////////////////
+// Variables
+glm::vec3 lightPos;
+bool show_test_window = false;
+bool light_moves = true;
+int const NUMBER_EXERCISES = 19;
+bool exercise[NUMBER_EXERCISES];
+float testval = 3.f;
+float time = 0.f;
+std::vector <glm::vec3> vertices, vertices2, vertices3, vertices4, vertices5;
+std::vector <glm::vec2> uvs, uvs2, uvs3, uvs4, uvs5;
+std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
+
+// Exercises
+void Exercise1(float currentTime);
+void Exercise2(float currentTime);
+void Exercise3(float currentTime);
+
+// Utils
+void GUI();
+bool CheckClickOption();
+void SetActiveExercise(int num);
+glm::mat4 Transform(glm::vec3 translate, float rotate, int rotAxis, float scale);
+extern bool loadOBJ(const char * path, std::vector <glm::vec3> & out_vertices, 
+	std::vector <glm::vec2> & out_uvs, std::vector <glm::vec3> & out_normals);
 
 namespace RenderVars {
 	const float FOV = glm::radians(65.f);
@@ -216,27 +173,7 @@ void GLinit(int width, int height) {
 	RV::panv[2] = -153.5f;
 }
 
-void GLcleanup() {
-	Cube::cleanupCube();
-	Sphere::cleanupSphere();
-
-	MyLoadedModel::cleanupModel();
-	MyLoadedModel::cleanupModel2();
-	MyLoadedModel::cleanupModel3();
-	MyLoadedModel::cleanupModel4();
-	MyLoadedModel::cleanupModel5();
-}
-
-// Translate, rotate and scale all in one
-glm::mat4 Transform(glm::vec3 translate, float rotate, float scale) {
-	glm::mat4 t = glm::translate(glm::mat4(), translate);
-	glm::mat4 r = glm::rotate(glm::mat4(), rotate, glm::vec3(0.f, 1.f, 0.f));
-	glm::mat4 s = glm::scale(glm::mat4(), glm::vec3(scale, scale, scale));
-	glm::mat4 myObjMat = t * r * s;
-	return myObjMat;
-}
-float time = 0.f;
-void GLrender(double currentTime) {
+void GLrender(float currentTime) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	RV::_modelView = glm::mat4(1.f);
@@ -247,228 +184,31 @@ void GLrender(double currentTime) {
 	// Render code
 	if (CheckClickOption) {
 
-		//////////////////////////////////// Exercici1
-		if (exercise[1]) {
+		if (exercise[1])
+			Exercise1(currentTime);
 
-			// Camera rotated 30 degrees along the Y axis
-			RV::rota[0] = glm::radians(30.f);
+		else if (exercise[2])
+			Exercise2(currentTime);
 
-			RV::panv[1] = 0.4f;
-			RV::panv[2] = -153.5f;
+		else if (exercise[3])
+			Exercise3(currentTime);
 
-			// Circle centered on the X axis
-			Sphere::drawSphere();
-
-			// Draw chicken, trump & cabins
-			int numCabins = 20;
-			float circleSize = 80.f;
-			float f = 0.015f;
-			glm::vec4 myColor = glm::vec4(1.f, 1.f, 1.f, 0.f);
-
-			for (unsigned int i = 0; i < numCabins+2; i++) {
-
-				// Draw chicken & trump cubes
-				if (i >= numCabins) {
-					myColor = glm::vec4(1.f, 0.f, 0.f, 0.f);
-					float fase = 2*3.14*numCabins / numCabins;
-					float xoffset = 1.f, yoffset = 2.5f;
-					if (i == numCabins + 1) {
-						xoffset -= 3.f;
-						myColor = glm::vec4(1.f, 1.f, 0.f, 0.f);
-					}
-
-					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase)+xoffset, circleSize*sin(2*3.14*f*(float)currentTime+fase)+yoffset, 1.f));
-					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(1.5f, 1.5f, 1.5f));
-					glm::mat4 myObjMat = trans * scale;
-
-					Cube::updateCube(myObjMat);
-					Cube::drawCube(currentTime, myColor);
-				}
-				// Draw normal cabins
-				else {
-					float fase = 2*3.14*i / numCabins;
-					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase), circleSize*sin(2*3.14*f*(float)currentTime+fase), 1.f));
-					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(3.f, 3.f, 3.f));
-					glm::mat4 myObjMat = trans * scale;
-	
-					Cube::updateCube(myObjMat);
-					Cube::drawCube(currentTime, myColor);
-				}
-			}
-		}
-
-		//////////////////////////////////// Exercici2
-		else if (exercise[2]) {
-
-			// Camera rotated 30 degrees along the Y axis
-			RV::rota[0] = glm::radians(30.f);
-
-			RV::panv[1] = 0.4f;
-			RV::panv[2] = -153.5f;
-
-			// Draw chicken, trump & cabins
-			int numCabins = 20;
-			float circleSize = 78.5;
-			float f = 0.015f;
-
-			for (unsigned int i = 0; i < numCabins+2; i++) {
-
-				if (i >= numCabins) {
-					float fase = 2*3.14*numCabins / numCabins;
-					float xoffset = 3.f, yoffset = -5.f;
-
-					// Draw trump
-					if (i == numCabins + 1) {
-						xoffset = -1.f;
-
-						glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase)+xoffset, circleSize*sin(2*3.14*f*(float)currentTime+fase)+yoffset, 1.f));
-						glm::mat4 rot = glm::rotate(glm::mat4(), 90.f, glm::vec3(0.f, 1.f, 0.f));
-						glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.003f, 0.003f, 0.003f));
-						glm::mat4 myObjMat = trans * rot * scale;
-
-						MyLoadedModel::updateModel5(myObjMat);
-						MyLoadedModel::drawModel5(currentTime);
-					} 
-					// Draw chicken 
-					else {
-						xoffset = 1.f;
-
-						glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase)+xoffset, circleSize*sin(2*3.14*f*(float)currentTime+fase)+yoffset, 1.f));
-						glm::mat4 rot = glm::rotate(glm::mat4(), -90.f, glm::vec3(0.f, 1.f, 0.f));
-						glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.005f, 0.005f, 0.005f));
-						glm::mat4 myObjMat = trans * rot * scale;
-
-						MyLoadedModel::updateModel2(myObjMat);
-						MyLoadedModel::drawModel2(currentTime);
-					}
-				}
-				// Draw normal cabins
-				else {
-					float fase = 2*3.14*i / numCabins;
-					glm::mat4 trans = glm::translate(glm::mat4(), glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase), circleSize*sin(2*3.14*f*(float)currentTime+fase), 1.f));
-					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.01f, 0.01f, 0.01f));
-					glm::mat4 myObjMat = trans * scale;
-
-					MyLoadedModel::updateModel(myObjMat);
-					MyLoadedModel::drawModel(currentTime);
-				}
-			}
-
-			// Draw wheel
-			float f3 = 0.015f;
-			testval += 0.003f;
-			if (testval >= 360)
-				testval = 0;
-
-			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
-			glm::mat4 rot3 = glm::rotate(glm::mat4(), (float)(2 * 3.14*f3*currentTime), glm::vec3(0.f, 0.f, 1.f));
-			glm::mat4 scale3 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
-			glm::mat4 myObjMat3 = trans3 * rot3 * scale3;
-			MyLoadedModel::updateModel3(myObjMat3);
-			MyLoadedModel::drawModel3(currentTime);
-
-			// Draw feet
-			glm::mat4 trans4 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
-			glm::mat4 rot4 = glm::rotate(glm::mat4(), 157.f, glm::vec3(0.f, 1.f, 0.f));
-			glm::mat4 scale4 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
-			glm::mat4 myObjMat4 = trans4 * rot4 * scale4;
-			MyLoadedModel::updateModel4(myObjMat4);
-			MyLoadedModel::drawModel4(currentTime);
-		}
-
-		//////////////////////////////////// Exercici3
-		else if (exercise[3]) {
-
-			// Camera rotated 30 degrees along the Y axis
-			RV::rota[0] = glm::radians(30.f);
-
-			// Draw chicken, trump & cabins
-			int numCabins = 20;
-			float circleSize = 78.5;
-			float f = 0.015f;
-			float fase = 2 * 3.14*numCabins / numCabins;
-			float xoffset = 3.f, yoffset = -5.f;
-
-			time += currentTime;
-			std::cout << currentTime << std::endl;
-			if (time > 800)
-				time = 0.f;
-			if (time < 400) {
-				RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 0.5f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 4.5f, 0.5f),
-					glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 3.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 5.f, 1.f),
-					glm::vec3(0.f, 1.f, 0.f)); 
-			}
-			else if (time >= 400 && time <= 800) {
-				RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset - 3.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 3.5f, 0.5f),
-					glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase) + xoffset + 1.f, circleSize*sin(2 * 3.14*f*(float)currentTime + fase) + yoffset + 1.5f, 1.f),
-					glm::vec3(0.f, 1.f, 0.f));
-
-				
-			}
-
-			// Lookat Trump
-			
-
-			// Looat Chicken
-			
-
-			for (unsigned int i = 0; i < numCabins + 2; i++) {
-
-				if (i >= numCabins) {
-					
-					// Draw trump
-					if (i == numCabins + 1) {
-						xoffset = -1.f;
-						MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase) + xoffset+0.5f, circleSize*sin(2*3.14*f*(float)currentTime+fase) + yoffset, 1.f), 1.8f, 0.003f));
-						MyLoadedModel::drawModel5(currentTime);
-					}
-					// Draw chicken 
-					else {
-						xoffset = 1.f;
-						MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2*3.14*f*(float)currentTime+fase) + xoffset+1.f, circleSize*sin(2*3.14*f*(float)currentTime+fase) + yoffset+1.1f, 1.f), -90.f, 0.003f));
-						MyLoadedModel::drawModel2(currentTime);
-					}
-				}
-				// Draw normal cabins
-				else {
-					float fase2 = 2 * 3.14*i / numCabins;
-					/*glm::mat4 trans = glm::translate(glm::mat4(), );
-					glm::mat4 scale = glm::scale(glm::mat4(), glm::vec3(0.01f, 0.01f, 0.01f));
-					glm::mat4 myObjMat = trans * scale;*/
-
-					MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2 * 3.14*f*(float)currentTime + fase2), circleSize*sin(2 * 3.14*f*(float)currentTime + fase2), 1.f), 0.f, 0.01f));
-					MyLoadedModel::drawModel(currentTime);
-				}
-			}
-
-			// Draw wheel
-			float f3 = 0.015f;
-			testval += 0.003f;
-			if (testval >= 360)
-				testval = 0;
-
-			glm::mat4 trans3 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
-			glm::mat4 rot3 = glm::rotate(glm::mat4(), (float)(2 * 3.14*f3*currentTime), glm::vec3(0.f, 0.f, 1.f));
-			glm::mat4 scale3 = glm::scale(glm::mat4(), glm::vec3(0.015f, 0.015f, 0.015f));
-			glm::mat4 myObjMat3 = trans3 * rot3 * scale3;
-			MyLoadedModel::updateModel3(myObjMat3);
-			MyLoadedModel::drawModel3(currentTime);
-
-			// Draw feet
-			glm::mat4 trans4 = glm::translate(glm::mat4(), glm::vec3(1.f, 1.f, 1.f));
-			glm::mat4 rot4 = glm::rotate(glm::mat4(), 157.f, glm::vec3(0.f, 1.f, 0.f));
-			glm::mat4 scale4 = glm::scale(glm::mat4(), glm::vec3(0.014f, 0.014f, 0.014f));
-			glm::mat4 myObjMat4 = trans4 * rot4 * scale4;
-			MyLoadedModel::updateModel4(myObjMat4);
-			MyLoadedModel::drawModel4(currentTime);
-		}
 	}
 
-	// Camera
 	RV::_MVP = RV::_projection * RV::_modelView;
 
-	// Gui
 	ImGui::Render();
+}
+
+void GLcleanup() {
+	Cube::cleanupCube();
+	Sphere::cleanupSphere();
+
+	MyLoadedModel::cleanupModel();
+	MyLoadedModel::cleanupModel2();
+	MyLoadedModel::cleanupModel3();
+	MyLoadedModel::cleanupModel4();
+	MyLoadedModel::cleanupModel5();
 }
 
 //////////////////////////////////// COMPILE AND LINK
@@ -1148,3 +888,220 @@ namespace MyLoadedModel {
 	}
 	#pragma endregion
 }
+
+////////////////////////////////////////////////// Exercises
+void Exercise1(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+
+	RV::panv[1] = 0.4f;
+	RV::panv[2] = -153.5f;
+
+	// Circle centered on the X axis
+	Sphere::drawSphere();
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 80.f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins/numCabins;
+	float xoffset = 1.f;
+	float yoffset = 2.5f;
+	glm::vec4 myColor = glm::vec4(1.f, 1.f, 1.f, 0.f);
+
+	for (unsigned int i = 0; i < numCabins+2; i++) {
+
+		if (i >= numCabins) {
+			// Draw chicken & trump cubes
+			myColor = glm::vec4(1.f, 0.f, 0.f, 0.f);
+			if (i == numCabins+1) {
+				xoffset -= 3.f;
+				myColor = glm::vec4(1.f, 1.f, 0.f, 0.f);
+			}
+			Cube::updateCube(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset, 1.f), 0.f, 1, 1.5f));
+			Cube::drawCube(currentTime, myColor);
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2*3.14*i/numCabins;
+			Cube::updateCube(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 3.f));
+			Cube::drawCube(currentTime, myColor);
+		}
+	}
+}
+
+void Exercise2(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+
+	RV::panv[1] = 0.4f;
+	RV::panv[2] = -153.5f;
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins/numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	for (unsigned int i = 0; i < numCabins+2; i++) {
+
+		if (i >= numCabins) {
+			
+			if (i == numCabins+1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+0.5f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime);
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+1.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*3.14*i/numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime);
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime);
+}
+
+void Exercise3(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins/numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	time += currentTime;
+	if (time > 800.f) 
+		time = 0.f;
+	else if (time < 400.f) {
+		// Lookat Trump
+		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-0.5f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+4.5f, 0.5f),
+			glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-3.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+5.f,1.f),
+			glm::vec3(0.f, 1.f, 0.f));
+	}
+	else if (time >= 400.f && time <= 800.f) {
+		// Lookat Chicken
+		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-3.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+3.5f, 0.5f),
+			glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+1.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+1.5f, 1.f),
+			glm::vec3(0.f, 1.f, 0.f));
+	}
+
+	for (unsigned int i = 0; i < numCabins+2; i++) {
+
+		if (i >= numCabins) {
+
+			if (i == numCabins+1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+0.5f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime);
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+1.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*pi*i/numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime);
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime);
+}
+
+////////////////////////////////////////////////// Utils
+#pragma region
+void GUI() {
+	bool show = true;
+	ImGui::Begin("Welcome!", &show, 0);
+
+	// Do your GUI code here....
+	{
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
+
+																																   // Selecció d'exercici
+		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11", "Exercise 12", "Exercise 13", "Exercise 14", "Exercise 15", "Exercise 16", "Exercise 17" };
+		static int listbox_item_current = -1, listbox_item_current2 = -1;
+		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
+		ImGui::PushItemWidth(-1);
+		ImGui::PopItemWidth();
+		SetActiveExercise(listbox_item_current + 1);
+
+		if (ImGui::Button("Toggle Light Move"))
+			light_moves = !light_moves;
+
+	}
+	// .........................
+
+	ImGui::End();
+
+	// Example code -- ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+	if (show_test_window) {
+		ImGui::SetNextWindowPos(ImVec2(650, 60), ImGuiSetCond_FirstUseEver);
+		ImGui::ShowTestWindow(&show_test_window);
+	}
+}
+
+bool CheckClickOption() {
+	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++)
+		if (exercise[i]) return true;
+
+	return false;
+}
+
+void SetActiveExercise(int num) {
+	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
+		if (i == num) exercise[i] = true;
+		else exercise[i] = false;
+	}
+}
+
+glm::mat4 Transform(glm::vec3 translate, float rotate, int rotAxis, float scale) {
+	glm::mat4 t = glm::translate(glm::mat4(), translate);
+
+	glm::mat4 r;
+	if (rotAxis == 0)	   r = glm::rotate(glm::mat4(), rotate, glm::vec3(1.f, 0.f, 0.f));
+	else if (rotAxis == 1) r = glm::rotate(glm::mat4(), rotate, glm::vec3(0.f, 1.f, 0.f));
+	else if (rotAxis == 2) r = glm::rotate(glm::mat4(), rotate, glm::vec3(0.f, 0.f, 1.f));
+	
+	glm::mat4 s = glm::scale(glm::mat4(), glm::vec3(scale, scale, scale));
+
+	glm::mat4 myObjMat = t * r * s;
+	return myObjMat;
+}
+#pragma endregion
