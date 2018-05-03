@@ -5,6 +5,7 @@
 #include <imgui\imgui_impl_sdl_gl3.h>
 #include <cstdio>
 #include "GL_framework.h"
+#include <iostream>
 
 extern void GUI();
 extern void GLmousecb(MouseEvent ev);
@@ -12,6 +13,8 @@ extern void GLResize(int width, int height);
 extern void GLinit(int width, int height);
 extern void GLcleanup();
 extern void GLrender(float currentTime);
+
+extern bool key_c, key_m;
 
 namespace {
 	const int expected_fps = 30;
@@ -89,14 +92,19 @@ int main(int argc, char** argv) {
 		while (SDL_PollEvent(&eve)) {
 			ImGui_ImplSdlGL3_ProcessEvent(&eve);
 			switch (eve.type) {
-			case SDL_WINDOWEVENT:
-				if (eve.window.event == SDL_WINDOWEVENT_RESIZED) {
-					GLResize(eve.window.data1, eve.window.data2);
-				}
-				break;
-			case SDL_QUIT:
-				quit_app = true;
-				break;
+				case SDL_WINDOWEVENT:
+					if (eve.window.event == SDL_WINDOWEVENT_RESIZED) 
+						GLResize(eve.window.data1, eve.window.data2);
+					break;
+				case SDL_QUIT:
+					quit_app = true;
+					break;
+				case SDL_KEYDOWN:
+					if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
+						key_c = !key_c;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_M) 
+						key_m = !key_m;
+					break;
 			}
 		}
 		ImGui_ImplSdlGL3_NewFrame(mainwindow);

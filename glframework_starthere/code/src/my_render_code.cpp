@@ -56,6 +56,7 @@ namespace MyLoadedModel {
 }
 
 // Variables
+bool key_c, key_m;
 glm::vec3 lightPos;
 bool show_test_window = false;
 bool light_moves = true;
@@ -180,9 +181,18 @@ void GLrender(float currentTime) {
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
-
+	std::cout << key_c << std::endl;
 	// Render code
 	if (CheckClickOption) {
+
+		if (key_m && exercise[2]) {
+			exercise[2] = false;
+			exercise[1] = true;
+		}
+		else if (!key_m && exercise[1]) {
+			exercise[1] = false;
+			exercise[2] = true;
+		}
 
 		if (exercise[1])
 			Exercise1(currentTime);
@@ -994,20 +1004,26 @@ void Exercise3(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	time += currentTime;
-	if (time > 800.f) 
-		time = 0.f;
-	else if (time < 400.f) {
-		// Lookat Trump
-		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-0.5f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+4.5f, 0.5f),
-			glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-3.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+5.f,1.f),
-			glm::vec3(0.f, 1.f, 0.f));
+	if (!key_c) {
+		time += currentTime;
+		if (time > 800.f)
+			time = 0.f;
+		else if (time < 400.f) {
+			// Lookat Trump
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
+		else if (time >= 400.f && time <= 800.f) {
+			// Lookat Chicken
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
 	}
-	else if (time >= 400.f && time <= 800.f) {
-		// Lookat Chicken
-		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset-3.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+3.5f, 0.5f),
-			glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase)+xoffset+1.f, circleSize*sin(2.f*pi*f*currentTime+fase)+yoffset+1.5f, 1.f),
-			glm::vec3(0.f, 1.f, 0.f));
+	else {
+		RV::panv[1] = 0.4f;
+		RV::panv[2] = -153.5f;
 	}
 
 	for (unsigned int i = 0; i < numCabins+2; i++) {
@@ -1052,9 +1068,9 @@ void GUI() {
 
 	// Do your GUI code here....
 	{
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
+		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
 
-																																   // Selecció d'exercici
+		// Selecció d'exercici
 		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11", "Exercise 12", "Exercise 13", "Exercise 14", "Exercise 15", "Exercise 16", "Exercise 17" };
 		static int listbox_item_current = -1, listbox_item_current2 = -1;
 		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
