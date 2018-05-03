@@ -56,7 +56,7 @@ namespace MyLoadedModel {
 }
 
 // Variables
-bool key_c, key_m;
+bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
 glm::vec3 lightPos;
 bool show_test_window = false;
 bool light_moves = true;
@@ -181,17 +181,15 @@ void GLrender(float currentTime) {
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
-	std::cout << key_c << std::endl;
+	std::cout << key_d << std::endl;
 	// Render code
 	if (CheckClickOption) {
 
-		if (key_m && exercise[2]) {
-			exercise[2] = false;
-			exercise[1] = true;
-		}
-		else if (!key_m && exercise[1]) {
-			exercise[1] = false;
-			exercise[2] = true;
+		if (exercise[2]) {
+			if (key_m) {
+				exercise[2] = false;
+				exercise[1] = true;
+			}
 		}
 
 		if (exercise[1])
@@ -1064,7 +1062,25 @@ void Exercise3(float currentTime) {
 #pragma region
 void GUI() {
 	bool show = true;
-	ImGui::Begin("Welcome!", &show, 0);
+
+	if (exercise[1])	   ImGui::Begin("Exercise 1", &show, 0);
+	else if (exercise[2])  ImGui::Begin("Exercise 2", &show, 0);
+	else if (exercise[3])  ImGui::Begin("Exercise 3", &show, 0);
+	else if (exercise[4])  ImGui::Begin("Exercise 4", &show, 0);
+	else if (exercise[5])  ImGui::Begin("Exercise 5", &show, 0);
+	else if (exercise[6])  ImGui::Begin("Exercise 6", &show, 0);
+	else if (exercise[7])  ImGui::Begin("Exercise 7", &show, 0);
+	else if (exercise[8])  ImGui::Begin("Exercise 8", &show, 0);
+	else if (exercise[9])  ImGui::Begin("Exercise 9", &show, 0);
+	else if (exercise[10]) ImGui::Begin("Exercise 10", &show, 0);
+	else if (exercise[11]) ImGui::Begin("Exercise 11", &show, 0);
+	else if (exercise[12]) ImGui::Begin("Exercise 12", &show, 0);
+	else if (exercise[13]) ImGui::Begin("Exercise 13", &show, 0);
+	else if (exercise[14]) ImGui::Begin("Exercise 14", &show, 0);
+	else if (exercise[15]) ImGui::Begin("Exercise 15", &show, 0);
+	else if (exercise[16]) ImGui::Begin("Exercise 16", &show, 0);
+	else if (exercise[17]) ImGui::Begin("Exercise 17", &show, 0);
+	else ImGui::Begin("Welcome!", &show, 0);
 
 	// Do your GUI code here....
 	{

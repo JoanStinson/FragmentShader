@@ -14,7 +14,7 @@ extern void GLinit(int width, int height);
 extern void GLcleanup();
 extern void GLrender(float currentTime);
 
-extern bool key_c, key_m;
+extern bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
 
 namespace {
 	const int expected_fps = 30;
@@ -100,10 +100,24 @@ int main(int argc, char** argv) {
 					quit_app = true;
 					break;
 				case SDL_KEYDOWN:
-					if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
+					if (eve.key.keysym.scancode == SDL_SCANCODE_A) 
+						key_a = !key_a;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_B)
+						key_b = !key_b;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
 						key_c = !key_c;
-					else if (eve.key.keysym.scancode == SDL_SCANCODE_M) 
+					if (eve.key.keysym.scancode == SDL_SCANCODE_D)
+						key_d = !key_d;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_M)
 						key_m = !key_m;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_P)
+						key_p = !key_p;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_S)
+						key_s = !key_s;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_T)
+						key_t = !key_t;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_Z)
+						key_z = !key_z;
 					break;
 			}
 		}
