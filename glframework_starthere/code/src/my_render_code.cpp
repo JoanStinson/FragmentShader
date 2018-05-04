@@ -57,6 +57,7 @@ namespace MyLoadedModel {
 
 // Variables
 bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
+int keyC = 4;
 glm::vec3 lightPos;
 bool show_test_window = false;
 bool light_moves = true;
@@ -64,6 +65,7 @@ int const NUMBER_EXERCISES = 19;
 bool exercise[NUMBER_EXERCISES];
 float testval = 3.f;
 float time = 0.f;
+float prevTime = 0.f;
 std::vector <glm::vec3> vertices, vertices2, vertices3, vertices4, vertices5;
 std::vector <glm::vec2> uvs, uvs2, uvs3, uvs4, uvs5;
 std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
@@ -72,6 +74,7 @@ std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
 void Exercise1(float currentTime);
 void Exercise2(float currentTime);
 void Exercise3(float currentTime);
+void Exercise4(float currentTime);
 
 // Utils
 void GUI();
@@ -181,7 +184,7 @@ void GLrender(float currentTime) {
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
-	std::cout << key_d << std::endl;
+	
 	// Render code
 	if (CheckClickOption) {
 
@@ -200,6 +203,9 @@ void GLrender(float currentTime) {
 
 		else if (exercise[3])
 			Exercise3(currentTime);
+
+		else if (exercise[4])
+			Exercise4(currentTime);
 
 	}
 
@@ -1003,16 +1009,17 @@ void Exercise3(float currentTime) {
 	float yoffset = -5.f;
 
 	if (!key_c) {
-		time += currentTime;
-		if (time > 800.f)
-			time = 0.f;
-		else if (time < 400.f) {
+		time = currentTime;
+		if (time > 4.f+prevTime) {
+			prevTime = time;
+		}
+		else if (time <= 2.f+prevTime) {
 			// Lookat Trump
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
 				glm::vec3(0.f, 1.f, 0.f));
 		}
-		else if (time >= 400.f && time <= 800.f) {
+		else if (time > 2.f+prevTime && time <= 4.f+prevTime) {
 			// Lookat Chicken
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
@@ -1045,6 +1052,98 @@ void Exercise3(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*pi*i/numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime);
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime);
+}
+
+void Exercise4(float currentTime) {
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins / numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	//std::cout << keyC << std::endl;
+
+	// Lateral
+	if (keyC == 1) {
+		RV::rota[0] = glm::radians(0.05f); 
+	}
+	// Pla General
+	else if (keyC == 2) {
+		RV::rota[0] = glm::radians(60.f);
+	}
+	// Pla contra-pla
+	else if (keyC == 3) {
+		time = currentTime;
+		if (time > 4.f + prevTime) {
+			prevTime = time;
+		}
+		else if (time <= 2.f + prevTime) {
+			// Lookat Trump
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
+		else if (time > 2.f + prevTime && time <= 4.f + prevTime) {
+			// Lookat Chicken
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
+	}
+	// Zenital i gir camera
+	else if (keyC == 4) {
+		time = currentTime;
+		if (time > 4.f + prevTime) {
+			prevTime = time;
+		}
+
+		float eixX = sin(currentTime);
+		float eixY = cos(currentTime);
+		std::cout << eixY << std::endl;
+
+		// Lookat Trump
+		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 7.3f, 1.3f),
+			glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 0.5f),
+			glm::vec3(eixX, eixY, 0.f));
+	
+	}
+
+	for (unsigned int i = 0; i < numCabins + 2; i++) {
+
+		if (i >= numCabins) {
+
+			if (i == numCabins + 1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime);
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*pi*i / numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
 			MyLoadedModel::drawModel(currentTime);
 		}
 	}
