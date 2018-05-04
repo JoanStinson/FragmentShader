@@ -1112,9 +1112,8 @@ void Exercise4(float currentTime) {
 			prevTime = time;
 		}
 
-		float eixX = sin(currentTime);
-		float eixY = cos(currentTime);
-		std::cout << eixY << std::endl;
+		float eixX = cos(currentTime);
+		float eixY = sin(currentTime);
 
 		// Lookat Trump
 		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 7.3f, 1.3f),
