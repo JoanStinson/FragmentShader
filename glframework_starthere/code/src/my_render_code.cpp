@@ -1112,11 +1112,11 @@ void Exercise4(float currentTime) {
 			prevTime = time;
 		}
 
-		float eixX = cos(currentTime);
-		float eixY = sin(currentTime);
+		float eixX = cos(2.f*pi*f*currentTime + fase);
+		float eixY = sin(2.f*pi*f*currentTime + fase);
 
 		// Lookat Trump
-		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 7.3f, 1.3f),
+		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 6.8f, 1.f),
 			glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 0.5f),
 			glm::vec3(eixX, eixY, 0.f));
 	
