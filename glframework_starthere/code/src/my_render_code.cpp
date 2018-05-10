@@ -18,7 +18,7 @@ namespace Sphere {
 	void setupSphere(glm::vec3 pos, float radius);
 	void cleanupSphere();
 	void updateSphere(glm::vec3 pos, float radius);
-	void drawSphere();
+	void drawSphere(glm::vec3 mycolor);
 }
 
 namespace Cube {
@@ -32,7 +32,7 @@ namespace MyLoadedModel {
 	void setupModel();
 	void cleanupModel();
 	void updateModel(const glm::mat4& transform);
-	void drawModel(double currentTime);
+	void drawModel(double currentTime, glm::vec3);
 
 	void setupModel2();
 	void cleanupModel2();
@@ -75,6 +75,7 @@ void Exercise1(float currentTime);
 void Exercise2(float currentTime);
 void Exercise3(float currentTime);
 void Exercise4(float currentTime);
+void Exercise5(float currentTime);
 
 // Utils
 void GUI();
@@ -207,6 +208,8 @@ void GLrender(float currentTime) {
 		else if (exercise[4])
 			Exercise4(currentTime);
 
+		else if (exercise[5])
+			Exercise5(currentTime);
 	}
 
 	RV::_MVP = RV::_projection * RV::_modelView;
@@ -376,13 +379,13 @@ void main() {\n\
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		Sphere::radius = radius;
 	}
-	void drawSphere() {
+	void drawSphere(glm::vec3 mycolor) {
 		glBindVertexArray(sphereVao);
 		glUseProgram(sphereProgram);
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
-		glUniform4f(glGetUniformLocation(sphereProgram, "color"), 1.f, 1.f, 1.f, 1.f);
+		glUniform4f(glGetUniformLocation(sphereProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 1.f);
 		glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
 		glDrawArrays(GL_POINTS, 0, 1);
 
@@ -634,14 +637,14 @@ namespace MyLoadedModel {
 		objMat = transform;
 	}
 
-	void drawModel(double currentTime) {
+	void drawModel(double currentTime, glm::vec3 mycolor) {
 		glBindVertexArray(modelVao);
 		glUseProgram(modelProgram);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
-		glUniform4f(glGetUniformLocation(modelProgram, "color"), 1.f, 1.f, 1.f, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 0.f);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
@@ -911,8 +914,10 @@ void Exercise1(float currentTime) {
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
+	Sphere::updateSphere(glm::vec3(1.f, 1.f, 1.f), 3.0f);
+
 	// Circle centered on the X axis
-	Sphere::drawSphere();
+	Sphere::drawSphere(glm::vec3(1.f, 1.f, 1.f));
 
 	// Draw chicken, trump & cabins
 	int numCabins = 20;
@@ -982,7 +987,7 @@ void Exercise2(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*3.14*i/numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f));
 		}
 	}
 
@@ -1052,7 +1057,7 @@ void Exercise3(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*pi*i/numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f));
 		}
 	}
 
@@ -1143,7 +1148,61 @@ void Exercise4(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*pi*i / numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f));
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime);
+}
+
+void Exercise5(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+
+	RV::panv[1] = 0.4f;
+	RV::panv[2] = -153.5f;
+
+	lightPos = glm::vec3(0.f, 40.f * sin((float)currentTime), 40.f * cos((float)currentTime));
+	Sphere::updateSphere(lightPos, 3.f);
+	Sphere::drawSphere(glm::vec3(0.f, 0.f, 0.5f*sin(currentTime)));
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins / numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	for (unsigned int i = 0; i < numCabins + 2; i++) {
+
+		if (i >= numCabins) {
+
+			if (i == numCabins + 1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime);
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*3.14*i / numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime, glm::vec3(0.f, 0.f, 0.5f*sin(currentTime)));
 		}
 	}
 
