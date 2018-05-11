@@ -15,7 +15,7 @@ extern void GLcleanup();
 extern void GLrender(float currentTime);
 
 extern bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
-extern int keyC;
+extern int keyA, keyC, keyZ;
 
 namespace {
 	const int expected_fps = 30;
@@ -101,8 +101,12 @@ int main(int argc, char** argv) {
 					quit_app = true;
 					break;
 				case SDL_KEYDOWN:
-					if (eve.key.keysym.scancode == SDL_SCANCODE_A) 
-						key_a = !key_a;
+					if (eve.key.keysym.scancode == SDL_SCANCODE_A) {
+						keyA++;
+						if (keyA == 18) {
+							keyA = 1;
+						}
+					}
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_B)
 						key_b = !key_b;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
@@ -119,8 +123,12 @@ int main(int argc, char** argv) {
 						key_s = !key_s;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_T)
 						key_t = !key_t;
-					else if (eve.key.keysym.scancode == SDL_SCANCODE_Z)
-						key_z = !key_z;
+					else if (eve.key.keysym.scancode == SDL_SCANCODE_Z) {
+						keyZ--;
+						if (keyZ == 0) {
+							keyZ = 1;
+						}
+					}
 					break;
 			}
 		}

@@ -56,13 +56,14 @@ namespace MyLoadedModel {
 }
 
 // Variables
+int exercise = 0;
 bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
-int keyC = 4;
+int keyA = 0, keyC = 4, keyZ = 0;
 glm::vec3 lightPos, lightPos2;
 bool show_test_window = false;
 bool light_moves = true;
 int const NUMBER_EXERCISES = 19;
-bool exercise[NUMBER_EXERCISES];
+//bool exercise[NUMBER_EXERCISES];
 float testval = 3.f;
 float time = 0.f;
 float prevTime = 0.f;
@@ -190,30 +191,31 @@ void GLrender(float currentTime) {
 	
 	// Render code
 	if (CheckClickOption) {
+	
+		exercise = keyA;
 
-		if (exercise[2]) {
+		if (exercise == 2) {
 			if (key_m) {
-				exercise[2] = false;
-				exercise[1] = true;
+				exercise = 1;
 			}
 		}
 
-		if (exercise[1])
+		if (exercise == 1)
 			Exercise1(currentTime);
 
-		else if (exercise[2])
+		else if (exercise == 2)
 			Exercise2(currentTime);
 
-		else if (exercise[3])
+		else if (exercise == 3)
 			Exercise3(currentTime);
 
-		else if (exercise[4])
+		else if (exercise == 4)
 			Exercise4(currentTime);
 
-		else if (exercise[5])
+		else if (exercise == 5)
 			Exercise5(currentTime);
 
-		else if (exercise[6])
+		else if (exercise == 6)
 			Exercise6(currentTime);
 	}
 
@@ -1362,23 +1364,23 @@ void Exercise6(float currentTime) {
 void GUI() {
 	bool show = true;
 
-	if (exercise[1])	   ImGui::Begin("Exercise 1", &show, 0);
-	else if (exercise[2])  ImGui::Begin("Exercise 2", &show, 0);
-	else if (exercise[3])  ImGui::Begin("Exercise 3", &show, 0);
-	else if (exercise[4])  ImGui::Begin("Exercise 4", &show, 0);
-	else if (exercise[5])  ImGui::Begin("Exercise 5", &show, 0);
-	else if (exercise[6])  ImGui::Begin("Exercise 6", &show, 0);
-	else if (exercise[7])  ImGui::Begin("Exercise 7", &show, 0);
-	else if (exercise[8])  ImGui::Begin("Exercise 8", &show, 0);
-	else if (exercise[9])  ImGui::Begin("Exercise 9", &show, 0);
-	else if (exercise[10]) ImGui::Begin("Exercise 10", &show, 0);
-	else if (exercise[11]) ImGui::Begin("Exercise 11", &show, 0);
-	else if (exercise[12]) ImGui::Begin("Exercise 12", &show, 0);
-	else if (exercise[13]) ImGui::Begin("Exercise 13", &show, 0);
-	else if (exercise[14]) ImGui::Begin("Exercise 14", &show, 0);
-	else if (exercise[15]) ImGui::Begin("Exercise 15", &show, 0);
-	else if (exercise[16]) ImGui::Begin("Exercise 16", &show, 0);
-	else if (exercise[17]) ImGui::Begin("Exercise 17", &show, 0);
+	if (exercise == 1)	   ImGui::Begin("Exercise 1", &show, 0);
+	else if (exercise == 2)  ImGui::Begin("Exercise 2", &show, 0);
+	else if (exercise == 3)  ImGui::Begin("Exercise 3", &show, 0);
+	else if (exercise == 4)  ImGui::Begin("Exercise 4", &show, 0);
+	else if (exercise == 5)  ImGui::Begin("Exercise 5", &show, 0);
+	else if (exercise == 6)  ImGui::Begin("Exercise 6", &show, 0);
+	else if (exercise == 7)  ImGui::Begin("Exercise 7", &show, 0);
+	else if (exercise == 8)  ImGui::Begin("Exercise 8", &show, 0);
+	else if (exercise == 9)  ImGui::Begin("Exercise 9", &show, 0);
+	else if (exercise == 10) ImGui::Begin("Exercise 10", &show, 0);
+	else if (exercise == 11) ImGui::Begin("Exercise 11", &show, 0);
+	else if (exercise == 12) ImGui::Begin("Exercise 12", &show, 0);
+	else if (exercise == 13) ImGui::Begin("Exercise 13", &show, 0);
+	else if (exercise == 14) ImGui::Begin("Exercise 14", &show, 0);
+	else if (exercise == 15) ImGui::Begin("Exercise 15", &show, 0);
+	else if (exercise == 16) ImGui::Begin("Exercise 16", &show, 0);
+	else if (exercise == 17) ImGui::Begin("Exercise 17", &show, 0);
 	else ImGui::Begin("Welcome!", &show, 0);
 
 	// Do your GUI code here....
@@ -1391,7 +1393,9 @@ void GUI() {
 		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
 		ImGui::PushItemWidth(-1);
 		ImGui::PopItemWidth();
-		SetActiveExercise(listbox_item_current + 1);
+
+		exercise = listbox_item_current+1;
+		//SetActiveExercise(listbox_item_current + 1);
 
 		/*if (ImGui::Button("Toggle Light Move"))
 			light_moves = !light_moves;*/
@@ -1409,18 +1413,16 @@ void GUI() {
 }
 
 bool CheckClickOption() {
-	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++)
-		if (exercise[i]) return true;
-
-	return false;
+	if (exercise == 0) return false;
+	else return false;
 }
 
-void SetActiveExercise(int num) {
+/*void SetActiveExercise(int num) {
 	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
 		if (i == num) exercise[i] = true;
 		else exercise[i] = false;
 	}
-}
+}*/
 
 glm::mat4 Transform(glm::vec3 translate, float rotate, int rotAxis, float scale) {
 	glm::mat4 t = glm::translate(glm::mat4(), translate);
