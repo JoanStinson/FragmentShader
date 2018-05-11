@@ -103,9 +103,6 @@ int main(int argc, char** argv) {
 				case SDL_KEYDOWN:
 					if (eve.key.keysym.scancode == SDL_SCANCODE_A) {
 						keyA++;
-						if (keyA == 18) {
-							keyA = 1;
-						}
 					}
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_B)
 						key_b = !key_b;
@@ -124,10 +121,7 @@ int main(int argc, char** argv) {
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_T)
 						key_t = !key_t;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_Z) {
-						keyZ--;
-						if (keyZ == 0) {
-							keyZ = 1;
-						}
+						keyZ++;
 					}
 					break;
 			}

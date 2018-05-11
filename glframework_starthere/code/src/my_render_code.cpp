@@ -56,9 +56,8 @@ namespace MyLoadedModel {
 }
 
 // Variables
-int exercise = 0;
+int exercise = 0, keyA = 0, keyC = 4, keyZ = 0;
 bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
-int keyA = 0, keyC = 4, keyZ = 0;
 glm::vec3 lightPos, lightPos2;
 bool show_test_window = false;
 bool light_moves = true;
@@ -191,8 +190,12 @@ void GLrender(float currentTime) {
 	
 	// Render code
 	if (CheckClickOption) {
-	
-		exercise = keyA;
+
+		exercise = keyA - keyZ;
+		if (exercise == -1)
+			exercise = 17;
+		if (exercise == 18)
+			exercise = 1;
 
 		if (exercise == 2) {
 			if (key_m) {
