@@ -58,7 +58,7 @@ namespace MyLoadedModel {
 // Variables
 bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
 int keyC = 4;
-glm::vec3 lightPos;
+glm::vec3 lightPos, lightPos2;
 bool show_test_window = false;
 bool light_moves = true;
 int const NUMBER_EXERCISES = 19;
@@ -76,6 +76,7 @@ void Exercise2(float currentTime);
 void Exercise3(float currentTime);
 void Exercise4(float currentTime);
 void Exercise5(float currentTime);
+void Exercise6(float currentTime);
 
 // Utils
 void GUI();
@@ -155,6 +156,7 @@ void GLinit(int width, int height) {
 
 	// Setup sphere
 	lightPos = glm::vec3(80.f, 100.f, 210.f);
+	lightPos2 = glm::vec3(1.f, 0.f, 0.f);
 	Sphere::setupSphere(glm::vec3(1.f, 1.f, 1.f), 3.0f);
 
 	// Setup models
@@ -210,6 +212,9 @@ void GLrender(float currentTime) {
 
 		else if (exercise[5])
 			Exercise5(currentTime);
+
+		else if (exercise[6])
+			Exercise6(currentTime);
 	}
 
 	RV::_MVP = RV::_projection * RV::_modelView;
@@ -563,7 +568,9 @@ namespace MyLoadedModel {
 	in vec3 in_Position;\n\
 	in vec3 in_Normal;\n\
 	uniform vec3 lPos;\n\
+	uniform vec3 lPos2;\n\
 	out vec3 lDir;\n\
+	out vec3 lDir2;\n\
 	out vec4 vert_Normal;\n\
 	uniform mat4 objMat;\n\
 	uniform mat4 mv_Mat;\n\
@@ -572,25 +579,29 @@ namespace MyLoadedModel {
 		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
 		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
 		lDir = normalize(lPos - gl_Position.xyz);\n\
+		lDir2 = normalize(lPos2 - gl_Position.xyz);\n\
 	}";
 
 	const char* model_fragShader =
 	"#version 330\n\
 	in vec4 vert_Normal;\n\
 	in vec3 lDir;\n\
+	in vec3 lDir2;\n\
 	out vec4 out_Color;\n\
 	uniform mat4 mv_Mat;\n\
 	uniform vec4 color;\n\
 	uniform int toonShading;\n\
 	void main() {\n\
 		float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
+		float u2 = dot(normalize(vert_Normal), mv_Mat*vec4(lDir2.x, lDir2.y, lDir2.z, 0.0));\n\
 		if (toonShading == 1){\n\
 			if (u < 0.2) u = 0; \n\
 			else if (u >= 0.2 && u < 0.4) u = 0.2;\n\
 			else if (u >= 0.4 && u < 0.5) u = 0.4;\n\
 			else if (u >= 0.5) u = 1;\n\
 		}\n\
-		out_Color = vec4(color.xyz * u , 1.0 );\n\
+		if (toonShading == 1) out_Color = vec4(color.xyz * u, 1.0 );\n\
+		else out_Color = vec4(color.xyz * u + u2, 1.0 );\n\
 	}";
 
 	////////////////////////////////////////////////// 1º Model Cabin
@@ -647,6 +658,7 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
@@ -711,6 +723,7 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram2, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram2, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram2, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram2, "color"), 1.f, 0.f, 0.f, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
@@ -775,6 +788,7 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram3, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram3, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram3, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram3, "color"), myColor.x, myColor.y, myColor.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
@@ -838,6 +852,7 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram4, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram4, "color"), myColor.x, myColor.y, myColor.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices4.size());
@@ -901,6 +916,7 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram5, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram5, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram5, "lPos"), lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram5, "color"), 1.f, 1.f, 0.f, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices5.size());
@@ -1240,6 +1256,107 @@ void Exercise5(float currentTime) {
 	MyLoadedModel::drawModel4(currentTime, myColor, false);
 }
 
+void Exercise6(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+
+	RV::panv[1] = 0.4f;
+	RV::panv[2] = -153.5f;
+	glm::vec3 myColor;
+	glm::vec3 prevLightPos, prevLightPos2;
+	glm::vec3 prevLightCol, prevLightCol2;
+
+	std::cout << key_d << std::endl;
+	if (!key_d) {
+
+		// Sol
+		lightPos = glm::vec3(0.f, 80.f*sin(currentTime / 3.2f), 80.f*cos(currentTime / 3.2f));
+		Sphere::updateSphere(lightPos, 3.f);
+
+		prevLightPos = lightPos;
+		prevLightCol = glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f);
+
+		Sphere::drawSphere(prevLightCol);
+
+		// Lluna
+		lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime / 2.75f), 80.f*sin(currentTime / 2.75f));
+		Sphere::updateSphere(lightPos2, 3.f);
+
+		prevLightPos2 = lightPos2;
+		prevLightCol2 = glm::vec3(0.f, 0.f, 0.5f*sin(currentTime / 3.2f));
+
+		Sphere::drawSphere(prevLightCol2);
+
+		time = currentTime;
+		//std::cout << time << std::endl;
+		if (time > 20.f + prevTime) {
+			prevTime = time;
+		}
+		else if (time <= 10.f + prevTime) { // Dia
+			myColor = glm::vec3(1.f, 0.5f + 0.5f*sin(currentTime / 3.2f), 0.f);
+		}
+		else if (time > 10.f + prevTime && time <= 20.f + prevTime) { // Nit
+			myColor = glm::vec3(0.5f + 0.5f*sin(currentTime / 3.2f), 0.f, 0.5f + 0.5f*cos(currentTime / 3.2f));
+		}
+	}
+	else {
+		// Sol
+		//Sphere::updateSphere(prevLightPos, 3.f);
+		Sphere::drawSphere(prevLightCol);
+
+		// Lluna
+		//Sphere::updateSphere(prevLightPos2, 3.f);
+		Sphere::drawSphere(prevLightCol2);
+
+		Sphere::updateSphere(glm::vec3(80.f, 80.f, 1.f), 5.f);
+		Sphere::drawSphere(glm::vec3(1.f, 0.f, 0.f));
+
+		myColor = glm::vec3(0.f, 0.f, 0.3f);
+	}
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins / numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	for (unsigned int i = 0; i < numCabins + 2; i++) {
+
+		if (i >= numCabins) {
+
+			if (i == numCabins + 1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime, false);
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime, false);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*3.14*i / numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime, myColor, false);
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime, myColor, false);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime, myColor, false);
+}
+
 ////////////////////////////////////////////////// Utils
 #pragma region
 void GUI() {
@@ -1276,8 +1393,8 @@ void GUI() {
 		ImGui::PopItemWidth();
 		SetActiveExercise(listbox_item_current + 1);
 
-		if (ImGui::Button("Toggle Light Move"))
-			light_moves = !light_moves;
+		/*if (ImGui::Button("Toggle Light Move"))
+			light_moves = !light_moves;*/
 
 	}
 	// .........................
