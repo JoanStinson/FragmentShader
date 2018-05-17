@@ -58,7 +58,7 @@ namespace MyLoadedModel {
 // Variables
 int exercise = 0, keyA = 0, keyC = 4, keyZ = 0;
 bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
-glm::vec3 lightPos, lightPos2;
+glm::vec3 lightPos, lightPos2, lightPos3, myColor3;
 bool show_test_window = false;
 bool light_moves = true;
 int const NUMBER_EXERCISES = 19;
@@ -671,8 +671,10 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos3"), lightPos3.x, lightPos3.y, lightPos3.z);
 		glUniform4f(glGetUniformLocation(modelProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 0.f);
 		glUniform4f(glGetUniformLocation(modelProgram4, "color2"), myColor2.x, myColor2.y, myColor2.z, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color3"), myColor3.x, myColor3.y, myColor3.z, 0.f);
 		glUniform4f(glGetUniformLocation(modelProgram4, "colorAmbient"), myColorAmbient.x, myColorAmbient.y, myColorAmbient.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
@@ -738,8 +740,9 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram2, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram2, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos3"), lightPos3.x, lightPos3.y, lightPos3.z);
 		glUniform4f(glGetUniformLocation(modelProgram2, "color"), 1.f, 0.f, 0.f, 0.f);
-		//glUniform4f(glGetUniformLocation(modelProgram, "color2"), 0.f, 0.f, 0.5f*cos(currentTime / 3.2f), 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color3"), myColor3.x, myColor3.y, myColor3.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
@@ -936,8 +939,9 @@ namespace MyLoadedModel {
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram5, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		glUniform3f(glGetUniformLocation(modelProgram5, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
+		glUniform3f(glGetUniformLocation(modelProgram, "lPos3"), lightPos3.x, lightPos3.y, lightPos3.z);
 		glUniform4f(glGetUniformLocation(modelProgram5, "color"), 1.f, 1.f, 0.f, 0.f);
-		//glUniform4f(glGetUniformLocation(modelProgram, "color2"), 0.f, 0.f, 0.5f*cos(currentTime / 3.2f), 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color3"), myColor3.x, myColor3.y, myColor3.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices5.size());
 
@@ -1357,6 +1361,13 @@ void Exercise6(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
+	if (!key_b) {
+		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else {
+		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+	}
+
 	// Lateral
 	if (keyC == 1) {
 		RV::rota[0] = glm::radians(0.05f);
@@ -1434,6 +1445,11 @@ void Exercise6(float currentTime) {
 				xoffset = -1.f;
 				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
 				MyLoadedModel::drawModel5(currentTime, false);
+
+				// Draw Bulb
+				lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
+				Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
+				Sphere::drawSphere(glm::vec3(0.59f, 0.78f, 0.58f ));
 			}
 			else {
 				// Draw chicken 
