@@ -32,7 +32,7 @@ namespace MyLoadedModel {
 	void setupModel();
 	void cleanupModel();
 	void updateModel(const glm::mat4& transform);
-	void drawModel(double currentTime, glm::vec3 myColor, bool toonShading);
+	void drawModel(double currentTime, glm::vec3 myColor, glm::vec3 myColor2, bool toonShading);
 
 	void setupModel2();
 	void cleanupModel2();
@@ -42,12 +42,12 @@ namespace MyLoadedModel {
 	void setupModel3();
 	void cleanupModel3();
 	void updateModel3(const glm::mat4& transform);
-	void drawModel3(double currentTime, glm::vec3 myColor, bool toonShading);
+	void drawModel3(double currentTime, glm::vec3 myColor, glm::vec3 myColor2, bool toonShading);
 
 	void setupModel4();
 	void cleanupModel4();
 	void updateModel4(const glm::mat4& transform);
-	void drawModel4(double currentTime, glm::vec3 myColor, bool toonShading);
+	void drawModel4(double currentTime, glm::vec3 myColor, glm::vec3 myColor2, bool toonShading);
 
 	void setupModel5();
 	void cleanupModel5();
@@ -191,7 +191,7 @@ void GLrender(float currentTime) {
 	// Render code
 	if (CheckClickOption) {
 
-		exercise = keyA - keyZ;
+		//exercise = keyA - keyZ;
 		if (exercise == -1)
 			exercise = 17;
 		if (exercise == 18)
@@ -218,8 +218,8 @@ void GLrender(float currentTime) {
 		else if (exercise == 5)
 			Exercise5(currentTime);
 
-		else if (exercise == 6)
-			Exercise6(currentTime);
+		//else if (exercise == 6)
+			//Exercise6(currentTime);
 	}
 
 	RV::_MVP = RV::_projection * RV::_modelView;
@@ -583,8 +583,8 @@ namespace MyLoadedModel {
 	void main() {\n\
 		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
 		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
-		lDir = normalize(lPos - gl_Position.xyz);\n\
-		lDir2 = normalize(lPos2 - gl_Position.xyz);\n\
+		lDir = normalize(lPos - (objMat * vec4(in_Position, 1.0)).xyz);\n\
+		lDir2 = normalize(lPos2 - (objMat * vec4(in_Position, 1.0)).xyz);\n\
 	}";
 
 	const char* model_fragShader =
@@ -595,18 +595,24 @@ namespace MyLoadedModel {
 	out vec4 out_Color;\n\
 	uniform mat4 mv_Mat;\n\
 	uniform vec4 color;\n\
+	uniform vec4 color2;\n\
 	uniform int toonShading;\n\
 	void main() {\n\
 		float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
-		float u2 = dot(normalize(vert_Normal), mv_Mat*vec4(lDir2.x, lDir2.y, lDir2.z, 0.0));\n\
+		float u2 = dot(normalize(vert_Normal),  mv_Mat*vec4(lDir2.x, lDir2.y, lDir2.z, 0.0));\n\
 		if (toonShading == 1){\n\
 			if (u < 0.2) u = 0; \n\
 			else if (u >= 0.2 && u < 0.4) u = 0.2;\n\
 			else if (u >= 0.4 && u < 0.5) u = 0.4;\n\
 			else if (u >= 0.5) u = 1;\n\
+			\n\
+			if (u2 < 0.2) u2 = 0; \n\
+			else if (u2 >= 0.2 && u2 < 0.4) u2 = 0.2;\n\
+			else if (u2 >= 0.4 && u2 < 0.5) u2 = 0.4;\n\
+			else if (u2 >= 0.5) u2 = 1;\n\
 		}\n\
-		if (toonShading == 1) out_Color = vec4(color.xyz * u, 1.0 );\n\
-		else out_Color = vec4(color.xyz * u + u2, 1.0 );\n\
+		if (toonShading == 1) out_Color = vec4(color.xyz * u + color2.xyz * u2, 1.0 );\n\
+		else out_Color = vec4(color2.xyz * u2 + color.xyz * u, 1.0 );\n\
 	}";
 
 	////////////////////////////////////////////////// 1º Model Cabin
@@ -656,7 +662,7 @@ namespace MyLoadedModel {
 		objMat = transform;
 	}
 
-	void drawModel(double currentTime, glm::vec3 mycolor, bool toonShading) {
+	void drawModel(double currentTime, glm::vec3 mycolor, glm::vec3 myColor2, bool toonShading) {
 		glBindVertexArray(modelVao);
 		glUseProgram(modelProgram);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
@@ -665,6 +671,7 @@ namespace MyLoadedModel {
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color2"), myColor2.x, myColor2.y, myColor2.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
@@ -730,6 +737,7 @@ namespace MyLoadedModel {
 		glUniform3f(glGetUniformLocation(modelProgram2, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram2, "color"), 1.f, 0.f, 0.f, 0.f);
+		//glUniform4f(glGetUniformLocation(modelProgram, "color2"), 0.f, 0.f, 0.5f*cos(currentTime / 3.2f), 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 
 		glDrawArrays(GL_TRIANGLES, 0, vertices2.size());
@@ -786,7 +794,7 @@ namespace MyLoadedModel {
 		objMat3= transform;
 	}
 
-	void drawModel3(double currentTime, glm::vec3 myColor, bool toonShading) {
+	void drawModel3(double currentTime, glm::vec3 myColor, glm::vec3 myColor2, bool toonShading) {
 		glBindVertexArray(modelVao3);
 		glUseProgram(modelProgram3);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram3, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat3));
@@ -795,6 +803,7 @@ namespace MyLoadedModel {
 		glUniform3f(glGetUniformLocation(modelProgram3, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram3, "color"), myColor.x, myColor.y, myColor.z, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color2"), myColor2.x, myColor2.y, myColor2.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices3.size());
 
@@ -850,7 +859,7 @@ namespace MyLoadedModel {
 		objMat4 = transform;
 	}
 
-	void drawModel4(double currentTime, glm::vec3 myColor, bool toonShading) {
+	void drawModel4(double currentTime, glm::vec3 myColor, glm::vec3 myColor2, bool toonShading) {
 		glBindVertexArray(modelVao4);
 		glUseProgram(modelProgram4);
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram4, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat4));
@@ -859,6 +868,7 @@ namespace MyLoadedModel {
 		glUniform3f(glGetUniformLocation(modelProgram4, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram4, "color"), myColor.x, myColor.y, myColor.z, 0.f);
+		glUniform4f(glGetUniformLocation(modelProgram4, "color2"), myColor2.x, myColor2.y, myColor2.z, 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices4.size());
 
@@ -923,6 +933,7 @@ namespace MyLoadedModel {
 		glUniform3f(glGetUniformLocation(modelProgram5, "lPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(glGetUniformLocation(modelProgram, "lPos2"), lightPos2.x, lightPos2.y, lightPos2.z);
 		glUniform4f(glGetUniformLocation(modelProgram5, "color"), 1.f, 1.f, 0.f, 0.f);
+		//glUniform4f(glGetUniformLocation(modelProgram, "color2"), 0.f, 0.f, 0.5f*cos(currentTime / 3.2f), 0.f);
 		glUniform1i(glGetUniformLocation(modelProgram, "toonShading"), toonShading);
 		glDrawArrays(GL_TRIANGLES, 0, vertices5.size());
 
@@ -1013,17 +1024,17 @@ void Exercise2(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*3.14*i/numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 		}
 	}
 
 	// Draw wheel
 	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
-	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 
 	// Draw feet
 	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
-	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 }
 
 void Exercise3(float currentTime) {
@@ -1083,17 +1094,17 @@ void Exercise3(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*pi*i/numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime+fase2), circleSize*sin(2.f*pi*f*currentTime+fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 		}
 	}
 
 	// Draw wheel
 	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
-	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 
 	// Draw feet
 	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
-	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 }
 
 void Exercise4(float currentTime) {
@@ -1174,17 +1185,17 @@ void Exercise4(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*pi*i / numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+			MyLoadedModel::drawModel(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 		}
 	}
 
 	// Draw wheel
 	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
-	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel3(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 
 	// Draw feet
 	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
-	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), true);
+	MyLoadedModel::drawModel4(currentTime, glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), true);
 }
 
 void Exercise5(float currentTime) {
@@ -1200,11 +1211,12 @@ void Exercise5(float currentTime) {
 	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime/3.2f), 0.5f*sin(currentTime/3.2f), 0.f));
 
 	// Lluna
-	glm::vec3 lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime/2.75f), 80.f*sin(currentTime/2.75f));
+lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime/3.2f), 80.f*sin(currentTime/3.2f));
 	Sphere::updateSphere(lightPos2, 3.f);
-	Sphere::drawSphere(glm::vec3(0.f, 0.f, 0.5f*sin(currentTime/3.2f)));
+	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f));
 
 	glm::vec3 myColor;
+	glm::vec3 myColor2;
 
 	time = currentTime;
 	std::cout << time << std::endl;
@@ -1213,9 +1225,11 @@ void Exercise5(float currentTime) {
 	}
 	else if (time <= 10.f + prevTime) { // Dia
 		myColor = glm::vec3(1.f, 0.5f+0.5f*sin(currentTime/3.2f), 0.f);
+		myColor2 = glm::vec3(0.f, 0.f, 0.f);
 	}
 	else if (time > 10.f + prevTime && time <= 20.f + prevTime) { // Nit
-		myColor = glm::vec3(0.5f + 0.5f*sin(currentTime/3.2f), 0.f, 0.5f + 0.5f*cos(currentTime/3.2f));
+		myColor = glm::vec3(0.f, 0.f, 0.f);
+		myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
 	}
 
 	// Draw chicken, trump & cabins
@@ -1248,20 +1262,20 @@ void Exercise5(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*3.14*i / numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime, myColor, false);
+			MyLoadedModel::drawModel(currentTime, myColor, myColor2, false);
 		}
 	}
 
 	// Draw wheel
 	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
-	MyLoadedModel::drawModel3(currentTime, myColor, false);
+	MyLoadedModel::drawModel3(currentTime, myColor, myColor2, false);
 
 	// Draw feet
 	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
-	MyLoadedModel::drawModel4(currentTime, myColor, false);
+	MyLoadedModel::drawModel4(currentTime, myColor, myColor2, false);
 }
 
-void Exercise6(float currentTime) {
+/*void Exercise6(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
 
@@ -1349,7 +1363,7 @@ void Exercise6(float currentTime) {
 			// Draw normal cabins
 			float fase2 = 2.f*3.14*i / numCabins;
 			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
-			MyLoadedModel::drawModel(currentTime, myColor, false);
+			MyLoadedModel::drawModel(currentTime, myColor, myColor2, false);
 		}
 	}
 
@@ -1360,7 +1374,7 @@ void Exercise6(float currentTime) {
 	// Draw feet
 	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
 	MyLoadedModel::drawModel4(currentTime, myColor, false);
-}
+}*/
 
 ////////////////////////////////////////////////// Utils
 #pragma region
