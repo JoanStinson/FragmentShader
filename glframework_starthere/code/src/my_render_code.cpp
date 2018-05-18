@@ -18,7 +18,7 @@ namespace Sphere {
 	void setupSphere(glm::vec3 pos, float radius);
 	void cleanupSphere();
 	void updateSphere(glm::vec3 pos, float radius);
-	void drawSphere(glm::vec3 mycolor);
+	void drawSphere(glm::vec3 mycolor, bool isLluna);
 }
 
 namespace Cube {
@@ -57,15 +57,15 @@ namespace MyLoadedModel {
 
 // Variables
 int exercise = 0, keyA = 0, keyC = 4, keyZ = 0;
-bool key_a, key_b, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
+bool key_a, key_b = true, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
 glm::vec3 lightPos, lightPos2, lightPos3, myColor3;
 bool show_test_window = false;
 bool light_moves = true;
 int const NUMBER_EXERCISES = 19;
 //bool exercise[NUMBER_EXERCISES];
 float testval = 3.f;
-float time = 0.f;
-float prevTime = 0.f;
+float time = 0.f, time2 = 0.f;
+float prevTime = 0.f, prevTime2 = 0.f;
 std::vector <glm::vec3> vertices, vertices2, vertices3, vertices4, vertices5;
 std::vector <glm::vec2> uvs, uvs2, uvs3, uvs4, uvs5;
 std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
@@ -192,10 +192,10 @@ void GLrender(float currentTime) {
 	if (CheckClickOption) {
 
 		//exercise = keyA - keyZ;
-		if (exercise == -1)
+		/*if (exercise == -1)
 			exercise = 17;
 		if (exercise == 18)
-			exercise = 1;
+			exercise = 1;*/
 
 		if (exercise == 2) {
 			if (key_m) {
@@ -276,6 +276,8 @@ namespace Sphere {
 	GLuint sphereShaders[3];
 	GLuint sphereProgram;
 	float radius;
+
+	glm::mat4 objMat = glm::mat4(1.f);
 
 	const char* sphere_vertShader =
 		"#version 330\n\
@@ -389,12 +391,20 @@ void main() {\n\
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		Sphere::radius = radius;
 	}
-	void drawSphere(glm::vec3 mycolor) {
+	void drawSphere(glm::vec3 mycolor, bool isLluna) {
 		glBindVertexArray(sphereVao);
 		glUseProgram(sphereProgram);
+		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RV::_MVP));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RV::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(RV::_projection));
+
+		// Sphere Rotation
+		if (isLluna && exercise >= 5) {
+			glm::mat4 rot = glm::rotate(glm::mat4(), 135.0f, glm::vec3(0.f, 1.f, 0.f));
+			objMat = rot;
+		}
+
 		glUniform4f(glGetUniformLocation(sphereProgram, "color"), mycolor.x, mycolor.y, mycolor.z, 1.f);
 		glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
 		glDrawArrays(GL_POINTS, 0, 1);
@@ -574,8 +584,10 @@ namespace MyLoadedModel {
 	in vec3 in_Normal;\n\
 	uniform vec3 lPos;\n\
 	uniform vec3 lPos2;\n\
+	uniform vec3 lPos3;\n\
 	out vec3 lDir;\n\
 	out vec3 lDir2;\n\
+	out vec3 lDir3;\n\
 	out vec4 vert_Normal;\n\
 	uniform mat4 objMat;\n\
 	uniform mat4 mv_Mat;\n\
@@ -585,6 +597,7 @@ namespace MyLoadedModel {
 		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
 		lDir = normalize(lPos - (objMat * vec4(in_Position, 1.0)).xyz);\n\
 		lDir2 = normalize(lPos2 - (objMat * vec4(in_Position, 1.0)).xyz);\n\
+		lDir3 = normalize(lPos3 - (objMat * vec4(in_Position, 1.0)).xyz);\n\
 	}";
 
 	const char* model_fragShader =
@@ -592,15 +605,18 @@ namespace MyLoadedModel {
 	in vec4 vert_Normal;\n\
 	in vec3 lDir;\n\
 	in vec3 lDir2;\n\
+	in vec3 lDir3;\n\
 	out vec4 out_Color;\n\
 	uniform mat4 mv_Mat;\n\
 	uniform vec4 color;\n\
 	uniform vec4 color2;\n\
+	uniform vec4 color3;\n\
 	uniform vec4 colorAmbient;\n\
 	uniform int toonShading;\n\
 	void main() {\n\
 		float u = dot(normalize(vert_Normal), mv_Mat*vec4(lDir.x, lDir.y, lDir.z, 0.0));\n\
 		float u2 = dot(normalize(vert_Normal),  mv_Mat*vec4(lDir2.x, lDir2.y, lDir2.z, 0.0));\n\
+		float u3 = dot(normalize(vert_Normal),  mv_Mat*vec4(lDir3.x, lDir3.y, lDir3.z, 0.0));\n\
 		if (toonShading == 1){\n\
 			if (u < 0.2) u = 0; \n\
 			else if (u >= 0.2 && u < 0.4) u = 0.2;\n\
@@ -611,9 +627,15 @@ namespace MyLoadedModel {
 			else if (u2 >= 0.2 && u2 < 0.4) u2 = 0.2;\n\
 			else if (u2 >= 0.4 && u2 < 0.5) u2 = 0.4;\n\
 			else if (u2 >= 0.5) u2 = 1;\n\
+			\n\
+			if (u3 < 0.2) u3 = 0; \n\
+			else if (u3 >= 0.2 && u3 < 0.4) u3 = 0.2;\n\
+			else if (u3 >= 0.4 && u3 < 0.5) u3 = 0.4;\n\
+			else if (u3 >= 0.5) u3 = 1;\n\
+			\n\
+			out_Color = vec4(color.xyz * u + color2.xyz * u2 +  colorAmbient.xyz + color3.xyz * u3, 1.0 );\n\
 		}\n\
-		if (toonShading == 1) out_Color = vec4(color.xyz * u + color2.xyz * u2, 1.0 );\n\
-		else out_Color = vec4(color2.xyz * u2 + color.xyz * u + colorAmbient.xyz, 1.0 );\n\
+		else out_Color = vec4(color.xyz * u + color2.xyz * u2 +  colorAmbient.xyz + color3.xyz * u3, 1.0 );\n\
 	}";
 
 	////////////////////////////////////////////////// 1º Model Cabin
@@ -962,7 +984,7 @@ void Exercise1(float currentTime) {
 	Sphere::updateSphere(glm::vec3(1.f, 1.f, 1.f), 3.0f);
 
 	// Circle centered on the X axis
-	Sphere::drawSphere(glm::vec3(1.f, 1.f, 1.f));
+	Sphere::drawSphere(glm::vec3(1.f, 1.f, 1.f), false);
 
 	// Draw chicken, trump & cabins
 	int numCabins = 20;
@@ -1157,10 +1179,10 @@ void Exercise4(float currentTime) {
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
-		time = currentTime;
+		/*time = currentTime;
 		if (time > 4.f + prevTime) {
 			prevTime = time;
-		}
+		}*/
 
 		float eixX = cos(2.f*pi*f*currentTime + fase);
 		float eixY = sin(2.f*pi*f*currentTime + fase);
@@ -1216,12 +1238,12 @@ void Exercise5(float currentTime) {
 	// Sol
 	lightPos = glm::vec3(0.f, 80.f*sin(currentTime/3.2f), 80.f*cos(currentTime/3.2f));
 	Sphere::updateSphere(lightPos, 3.f);
-	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime/3.2f), 0.5f*sin(currentTime/3.2f), 0.f));
+	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime/3.2f), 0.5f*sin(currentTime/3.2f), 0.f), false);
 
 	// Lluna
 	lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime/3.2f), 80.f*sin(currentTime/3.2f));
 	Sphere::updateSphere(lightPos2, 3.f);
-	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f));
+	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f), true);
 
 	glm::vec3 myColor;
 	glm::vec3 myColor2;
@@ -1236,6 +1258,8 @@ void Exercise5(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
+	time = currentTime;
+	
 	// Lateral
 	if (keyC == 1) {
 		RV::rota[0] = glm::radians(0.05f);
@@ -1246,17 +1270,17 @@ void Exercise5(float currentTime) {
 	}
 	// Pla contra-pla
 	else if (keyC == 3) {
-		time = currentTime;
-		if (time > 4.f + prevTime) {
-			prevTime = time;
+		time2 = currentTime;
+		if (time2 > 4.f + prevTime2) {
+			prevTime2 = time2;
 		}
-		else if (time <= 2.f + prevTime) {
+		else if (time2 <= 2.f + prevTime2) {
 			// Lookat Trump
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
 				glm::vec3(0.f, 1.f, 0.f));
 		}
-		else if (time > 2.f + prevTime && time <= 4.f + prevTime) {
+		else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
 			// Lookat Chicken
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
@@ -1265,10 +1289,6 @@ void Exercise5(float currentTime) {
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
-		time = currentTime;
-		if (time > 4.f + prevTime) {
-			prevTime = time;
-		}
 
 		float eixX = cos(2.f*pi*f*currentTime + fase);
 		float eixY = sin(2.f*pi*f*currentTime + fase);
@@ -1280,7 +1300,7 @@ void Exercise5(float currentTime) {
 
 	}
 
-	time = currentTime;
+	//time = currentTime;
 	std::cout << time << std::endl;
 	if (time > 20.f + prevTime) {
 		prevTime = time;
@@ -1341,12 +1361,12 @@ void Exercise6(float currentTime) {
 	// Sol
 	lightPos = glm::vec3(0.f, 80.f*sin(currentTime / 3.2f), 80.f*cos(currentTime / 3.2f));
 	Sphere::updateSphere(lightPos, 3.f);
-	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f));
+	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f), false);
 
 	// Lluna
 	lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime / 3.2f), 80.f*sin(currentTime / 3.2f));
 	Sphere::updateSphere(lightPos2, 3.f);
-	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f));
+	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f), true);
 
 	glm::vec3 myColor;
 	glm::vec3 myColor2;
@@ -1360,6 +1380,8 @@ void Exercise6(float currentTime) {
 	float fase = 2.f*pi*numCabins / numCabins;
 	float xoffset = 3.f;
 	float yoffset = -5.f;
+
+	//time = currentTime;
 
 	if (!key_b) {
 		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -1378,17 +1400,17 @@ void Exercise6(float currentTime) {
 	}
 	// Pla contra-pla
 	else if (keyC == 3) {
-		time = currentTime;
-		if (time > 4.f + prevTime) {
-			prevTime = time;
+		time2 = currentTime;
+		if (time2 > 4.f + prevTime2) {
+			prevTime2 = time2;
 		}
-		else if (time <= 2.f + prevTime) {
+		else if (time2 <= 2.f + prevTime2) {
 			// Lookat Trump
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
 				glm::vec3(0.f, 1.f, 0.f));
 		}
-		else if (time > 2.f + prevTime && time <= 4.f + prevTime) {
+		else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
 			// Lookat Chicken
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
@@ -1397,10 +1419,6 @@ void Exercise6(float currentTime) {
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
-		time = currentTime;
-		if (time > 4.f + prevTime) {
-			prevTime = time;
-		}
 
 		float eixX = cos(2.f*pi*f*currentTime + fase);
 		float eixY = sin(2.f*pi*f*currentTime + fase);
@@ -1449,7 +1467,7 @@ void Exercise6(float currentTime) {
 				// Draw Bulb
 				lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
 				Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
-				Sphere::drawSphere(glm::vec3(0.59f, 0.78f, 0.58f ));
+				Sphere::drawSphere(glm::vec3(0.59f, 0.78f, 0.58f ), false);
 			}
 			else {
 				// Draw chicken 

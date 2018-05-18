@@ -107,9 +107,9 @@ int main(int argc, char** argv) {
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_B)
 						key_b = !key_b;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
-						key_c = !key_c;
+						//key_c = !key_c;
 						keyC++;
-						if (keyC > 4) keyC = 1;
+						if (keyC == 5) keyC = 1;
 					if (eve.key.keysym.scancode == SDL_SCANCODE_D)
 						key_d = !key_d;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_M)
