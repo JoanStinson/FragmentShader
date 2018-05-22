@@ -56,6 +56,7 @@ namespace MyLoadedModel {
 }
 
 // Variables
+bool end = true;
 bool activateTS = true;
 int exercise = 0;
 int keyA = 0, keyB = 0, keyC = 4, keyZ = 0;
@@ -64,7 +65,7 @@ glm::vec3 lightPos, lightPos2, lightPos3, myColor3;
 bool show_test_window = false;
 bool light_moves = true;
 int const NUMBER_EXERCISES = 19;
-//bool exercise[NUMBER_EXERCISES];
+float yBulb = 0.f;
 float testval = 3.f;
 float time = 0.f, time2 = 0.f;
 float prevTime = 0.f, prevTime2 = 0.f;
@@ -1561,18 +1562,18 @@ void Exercise7(float currentTime) {
 		if (time2 > 4.f + prevTime2) {
 			prevTime2 = time2;
 		}
-		else if (time2 <= 2.f + prevTime2) {
+		//else if (time2 <= 2.f + prevTime2) {
 			// Lookat Trump
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
 				glm::vec3(0.f, 1.f, 0.f));
-		}
-		else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
+		//}
+		//else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
 			// Lookat Chicken
-			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
-				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
-				glm::vec3(0.f, 1.f, 0.f));
-		}
+			//RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
+				//glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
+				//glm::vec3(0.f, 1.f, 0.f));
+		//}
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
@@ -1624,9 +1625,20 @@ void Exercise7(float currentTime) {
 				MyLoadedModel::drawModel5(currentTime, false);
 
 				// Draw Bulb
-				lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
-				Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
-				Sphere::drawSphere(bulbColor, false);
+				if (keyB != 2) {
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
+					Sphere::drawSphere(bulbColor, false);
+				}
+				else {
+					std::cout << yBulb << std::endl;
+					// de 0 a -0.5
+					yBulb = -cos(currentTime/1.f);
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime/2.f)));
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime/2.f))), 0.2f );
+					Sphere::drawSphere(bulbColor, false);
+				}
+
 			}
 			else {
 				// Draw chicken 

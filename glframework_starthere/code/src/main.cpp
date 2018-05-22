@@ -105,11 +105,11 @@ int main(int argc, char** argv) {
 						keyA++;
 					}
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_B)
-						key_b = !key_b;
+						//key_b = !key_b;
 						keyB++;
 						if (keyB == 3) keyB = 0;
 					else if (eve.key.keysym.scancode == SDL_SCANCODE_C) 
-						key_c = !key_c;
+						//key_c = !key_c;
 						keyC++;
 						if (keyC == 5) keyC = 1;
 					if (eve.key.keysym.scancode == SDL_SCANCODE_D)
