@@ -1610,7 +1610,150 @@ void Exercise7(float currentTime) {
 	MyLoadedModel::drawModel4(currentTime, myColor, myColor2, myColorAmbient, false);
 }
 
-void Exercise8(float currentTime) {}
+void Exercise8(float currentTime) {
+	// Camera rotated 30 degrees along the Y axis
+	RV::rota[0] = glm::radians(30.f);
+	RV::panv[1] = 0.4f;
+	RV::panv[2] = -153.5f;
+
+	// Sol
+	lightPos = glm::vec3(0.f, 80.f*sin(currentTime / 3.2f), 80.f*cos(currentTime / 3.2f));
+	Sphere::updateSphere(lightPos, 3.f);
+	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f), false);
+
+	// Lluna
+	lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime / 3.2f), 80.f*sin(currentTime / 3.2f));
+	Sphere::updateSphere(lightPos2, 3.f);
+	Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f), true);
+
+	glm::vec3 myColor;
+	glm::vec3 myColor2;
+	glm::vec3 myColorAmbient;
+
+	// Draw chicken, trump & cabins
+	int numCabins = 20;
+	float circleSize = 78.5f;
+	float pi = 3.14f;
+	float f = 0.015f;
+	float fase = 2.f*pi*numCabins / numCabins;
+	float xoffset = 3.f;
+	float yoffset = -5.f;
+
+	if (!key_b) myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+	else myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+
+	// Lateral
+	if (keyC == 1) {
+		RV::rota[0] = glm::radians(0.05f);
+	}
+	// Pla General
+	else if (keyC == 2) {
+		RV::rota[0] = glm::radians(60.f);
+	}
+	// Pla contra-pla
+	else if (keyC == 3) {
+		time2 = currentTime;
+		if (time2 > 4.f + prevTime2) {
+			prevTime2 = time2;
+		}
+		else if (time2 <= 2.f + prevTime2) {
+			// Lookat Trump
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
+		else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
+			// Lookat Chicken
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
+	}
+	// Zenital i gir camera
+	else if (keyC == 4) {
+
+		float eixX = cos(2.f*pi*f*currentTime + fase);
+		float eixY = sin(2.f*pi*f*currentTime + fase);
+
+		// Lookat Trump
+		RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 6.8f, 1.f),
+			glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 2.3f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 0.5f),
+			glm::vec3(eixX, eixY, 0.f));
+
+	}
+
+	time = currentTime;
+
+	// Nit
+	myColor = glm::vec3(0.f, 0.f, 0.f);
+	myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
+	myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
+
+	glm::vec3 bulbColor;
+
+	// Bulb Turned off
+	if (keyB == 0) {
+		bulbColor = glm::vec3(0.f, 0.f, 0.f);
+		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	// Bulb Turned On
+	else if (keyB == 1) {
+		bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
+		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+	}
+	else if (keyB == 2) {
+		bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
+		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+	}
+
+	for (unsigned int i = 0; i < numCabins + 2; i++) {
+
+		if (i >= numCabins) {
+
+			if (i == numCabins + 1) {
+				// Draw trump
+				xoffset = -1.f;
+				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
+				MyLoadedModel::drawModel5(currentTime, false);
+
+				// Draw Bulb
+				if (keyB != 2) {
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
+					Sphere::drawSphere(bulbColor, false);
+				}
+				else {
+					// de 0 a -0.5
+					yBulb = -cos(currentTime / 1.f);
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f)));
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f))), 0.2f);
+					Sphere::drawSphere(bulbColor, false);
+				}
+
+			}
+			else {
+				// Draw chicken 
+				xoffset = 1.f;
+				MyLoadedModel::updateModel2(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.1f, 1.f), -90.f, 1, 0.003f));
+				MyLoadedModel::drawModel2(currentTime, false);
+			}
+		}
+		else {
+			// Draw normal cabins
+			float fase2 = 2.f*3.14*i / numCabins;
+			MyLoadedModel::updateModel(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase2), circleSize*sin(2.f*pi*f*currentTime + fase2), 1.f), 0.f, 1, 0.01f));
+			MyLoadedModel::drawModel(currentTime, myColor, myColor2, myColorAmbient, false);
+		}
+	}
+
+	// Draw wheel
+	MyLoadedModel::updateModel3(Transform(glm::vec3(1.f, 1.f, 1.f), 2.f*pi*f*currentTime, 2, 0.0142f));
+	MyLoadedModel::drawModel3(currentTime, myColor, myColor2, myColorAmbient, false);
+
+	// Draw feet
+	MyLoadedModel::updateModel4(Transform(glm::vec3(1.f, 1.f, 1.f), 157.f, 1, 0.014f));
+	MyLoadedModel::drawModel4(currentTime, myColor, myColor2, myColorAmbient, false);
+}
 
 void Exercise9(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
