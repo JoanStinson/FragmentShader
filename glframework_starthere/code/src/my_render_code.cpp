@@ -56,19 +56,13 @@ namespace MyLoadedModel {
 }
 
 // Variables
-bool end = true;
-bool activateTS = true;
-int exercise = 0;
-int keyA = 0, keyB = 0, keyC = 4, keyZ = 0;
-bool key_a, key_b = true, key_c, key_d, key_m, key_p, key_s, key_t, key_z;
+bool end = true, activateTS = true, show_test_window = false, light_moves = true;
+bool key_a, key_b = true, key_c, key_c2, key_d, key_m, key_p, key_s, key_t, key_z;
+
+int exercise = 0, keyA = 0, keyB = 0, keyC = 4, keyZ = 0;
+float yBulb = 0.f, testval = 3.f, time = 0.f, time2 = 0.f, prevTime = 0.f, prevTime2 = 0.f;
+
 glm::vec3 lightPos, lightPos2, lightPos3, myColor3;
-bool show_test_window = false;
-bool light_moves = true;
-int const NUMBER_EXERCISES = 19;
-float yBulb = 0.f;
-float testval = 3.f;
-float time = 0.f, time2 = 0.f;
-float prevTime = 0.f, prevTime2 = 0.f;
 std::vector <glm::vec3> vertices, vertices2, vertices3, vertices4, vertices5;
 std::vector <glm::vec2> uvs, uvs2, uvs3, uvs4, uvs5;
 std::vector <glm::vec3> normals, normals2, normals3, normals4, normals5;
@@ -81,6 +75,7 @@ void Exercise4(float currentTime);
 void Exercise5(float currentTime);
 void Exercise6(float currentTime);
 void Exercise7(float currentTime);
+void Exercise8(float currentTime);
 void Exercise9(float currentTime);
 void Exercise10(float currentTime);
 void Exercise11(float currentTime);
@@ -197,47 +192,24 @@ void GLrender(float currentTime) {
 	// Render code
 	if (CheckClickOption) {
 
-		//exercise = keyA - keyZ;
-		/*if (exercise == -1)
-			exercise = 17;
-		if (exercise == 18)
-			exercise = 1;*/
-
 		if (exercise == 2) {
-			if (key_m) {
-				exercise = 1;
-			}
+			if (key_m) exercise = 1;
 		}
 
-		if (exercise == 1)
-			Exercise1(currentTime);
-
-		else if (exercise == 2)
-			Exercise2(currentTime);
-
-		else if (exercise == 3)
-			Exercise3(currentTime);
-
-		else if (exercise == 4)
-			Exercise4(currentTime);
-
-		else if (exercise == 5)
-			Exercise5(currentTime);
-
-		else if (exercise == 6)
-			Exercise6(currentTime);
-
-		else if (exercise == 7)
-			Exercise7(currentTime);
-
-		else if (exercise == 9)
-			Exercise9(currentTime);
-
-		else if (exercise == 10)
-			Exercise10(currentTime);
-
-		else if (exercise == 11)
-			Exercise11(currentTime);
+		switch (exercise) {
+			case 1:  Exercise1(currentTime);  break;
+			case 2:  Exercise2(currentTime);  break;
+			case 3:  Exercise3(currentTime);  break;
+			case 4:  Exercise4(currentTime);  break;
+			case 5:  Exercise5(currentTime);  break;
+			case 6:  Exercise6(currentTime);  break;
+			case 7:  Exercise7(currentTime);  break;
+			case 8:  Exercise8(currentTime);  break;
+			case 9:  Exercise9(currentTime);  break;
+			case 10: Exercise10(currentTime); break;
+			case 11: Exercise11(currentTime); break;
+			default: break;
+		}
 	}
 
 	RV::_MVP = RV::_projection * RV::_modelView;
@@ -995,7 +967,6 @@ namespace MyLoadedModel {
 void Exercise1(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1038,7 +1009,6 @@ void Exercise1(float currentTime) {
 void Exercise2(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1098,7 +1068,7 @@ void Exercise3(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	if (!key_c) {
+	if (!key_c2) {
 		time = currentTime;
 		if (time > 4.f+prevTime) {
 			prevTime = time;
@@ -1166,8 +1136,6 @@ void Exercise4(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	//std::cout << keyC << std::endl;
-
 	// Lateral
 	if (keyC == 1) {
 		RV::rota[0] = glm::radians(0.05f); 
@@ -1197,10 +1165,6 @@ void Exercise4(float currentTime) {
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
-		/*time = currentTime;
-		if (time > 4.f + prevTime) {
-			prevTime = time;
-		}*/
 
 		float eixX = cos(2.f*pi*f*currentTime + fase);
 		float eixY = sin(2.f*pi*f*currentTime + fase);
@@ -1249,7 +1213,6 @@ void Exercise4(float currentTime) {
 void Exercise5(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1318,22 +1281,21 @@ void Exercise5(float currentTime) {
 
 	}
 
-	//time = currentTime;
-	std::cout << time << std::endl;
 	if (time > 20.f + prevTime) {
 		prevTime = time;
 	}
-	else if (time <= 10.f + prevTime) { // Dia
+	// Dia
+	else if (time <= 10.f + prevTime) { 
 		myColor = glm::vec3(1.f, 0.5f+0.5f*sin(currentTime/3.2f), 0.f);
 		myColor2 = glm::vec3(0.f, 0.f, 0.f);
 		myColorAmbient = glm::vec3(0.f, 0.f, 0.f);
 	}
-	else if (time > 10.f + prevTime && time <= 20.f + prevTime) { // Nit
+	// Nit
+	else if (time > 10.f + prevTime && time <= 20.f + prevTime) { 
 		myColor = glm::vec3(0.f, 0.f, 0.f);
 		myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
 		myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
 	}
-
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -1372,7 +1334,6 @@ void Exercise5(float currentTime) {
 void Exercise6(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1398,16 +1359,10 @@ void Exercise6(float currentTime) {
 	float fase = 2.f*pi*numCabins / numCabins;
 	float xoffset = 3.f;
 	float yoffset = -5.f;
+
+	if (!key_b) myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+	else myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
 	
-	//time = currentTime;
-
-	if (!key_b) {
-		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	else {
-		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
-	}
-
 	// Lateral
 	if (keyC == 1) {
 		RV::rota[0] = glm::radians(0.05f);
@@ -1450,7 +1405,7 @@ void Exercise6(float currentTime) {
 
 	if (!key_d) {
 		time = currentTime;
-		std::cout << time << std::endl;
+
 		if (time > 20.f + prevTime) {
 			prevTime = time;
 		}
@@ -1470,7 +1425,6 @@ void Exercise6(float currentTime) {
 			myColor2 = glm::vec3(0.32f, 0.6f, 0.78f);
 			myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
 	}
-
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -1514,7 +1468,6 @@ void Exercise6(float currentTime) {
 void Exercise7(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1541,13 +1494,9 @@ void Exercise7(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	if (!key_b) {
-		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	else {
-		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
-	}
-
+	if (!key_b) myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+	else myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+	
 	// Lateral
 	if (keyC == 1) {
 		RV::rota[0] = glm::radians(0.05f);
@@ -1562,18 +1511,18 @@ void Exercise7(float currentTime) {
 		if (time2 > 4.f + prevTime2) {
 			prevTime2 = time2;
 		}
-		//else if (time2 <= 2.f + prevTime2) {
+		else if (time2 <= 2.f + prevTime2) {
 			// Lookat Trump
 			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 4.5f, 0.5f),
 				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.f, 1.f),
 				glm::vec3(0.f, 1.f, 0.f));
-		//}
-		//else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
+		}
+		else if (time2 > 2.f + prevTime2 && time2 <= 4.f + prevTime2) {
 			// Lookat Chicken
-			//RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
-				//glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
-				//glm::vec3(0.f, 1.f, 0.f));
-		//}
+			RV::_modelView = glm::lookAt(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset - 3.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 3.5f, 0.5f),
+				glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 1.f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 1.5f, 1.f),
+				glm::vec3(0.f, 1.f, 0.f));
+		}
 	}
 	// Zenital i gir camera
 	else if (keyC == 4) {
@@ -1596,7 +1545,6 @@ void Exercise7(float currentTime) {
 	myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
 
 	glm::vec3 bulbColor;
-	std::cout << keyB << std::endl;
 
 	// Bulb Turned off
 	if (keyB == 0) {
@@ -1612,7 +1560,6 @@ void Exercise7(float currentTime) {
 		bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
 		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
 	}
-
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -1631,7 +1578,6 @@ void Exercise7(float currentTime) {
 					Sphere::drawSphere(bulbColor, false);
 				}
 				else {
-					std::cout << yBulb << std::endl;
 					// de 0 a -0.5
 					yBulb = -cos(currentTime/1.f);
 					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime/2.f)));
@@ -1664,10 +1610,11 @@ void Exercise7(float currentTime) {
 	MyLoadedModel::drawModel4(currentTime, myColor, myColor2, myColorAmbient, false);
 }
 
+void Exercise8(float currentTime) {}
+
 void Exercise9(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1675,11 +1622,6 @@ void Exercise9(float currentTime) {
 	lightPos = glm::vec3(0.f, 80.f*sin(currentTime / 3.2f), 80.f*cos(currentTime / 3.2f));
 	Sphere::updateSphere(lightPos, 3.f);
 	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f), false);
-
-	// Lluna
-	//lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime / 3.2f), 80.f*sin(currentTime / 3.2f));
-	//Sphere::updateSphere(lightPos2, 3.f);
-	//Sphere::drawSphere(glm::vec3(0.32f, 0.6f, 0.78f), true);
 
 	glm::vec3 myColor;
 	glm::vec3 myColor2;
@@ -1694,12 +1636,9 @@ void Exercise9(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	if (!key_t) {
-		activateTS = true;
-	}
+	if (!key_t) activateTS = true;
 	else activateTS = false;
 
-	time = currentTime;
 	myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// Lateral
@@ -1742,22 +1681,68 @@ void Exercise9(float currentTime) {
 
 	}
 
-	//time = currentTime;
-	std::cout << time << std::endl;
-	if (time > 20.f + prevTime) {
-		prevTime = time;
+	if (!key_d) {
+		
+		time = currentTime;
+
+		if (time > 20.f + prevTime) {
+			prevTime = time;
+		}
+		// Dia
+		else if (time <= 10.f + prevTime) { 
+			myColor = glm::vec3(1.f, 0.5f + 0.5f*sin(currentTime / 3.2f), 0.f);
+			myColor2 = glm::vec3(0.f, 0.f, 0.f);
+			myColorAmbient = glm::vec3(0.f, 0.f, 0.f);
+		}
+		// Nit
+		else if (time > 10.f + prevTime && time <= 20.f + prevTime) { 
+			if (!activateTS) {
+				myColor = glm::vec3(0.f, 0.f, 0.f);
+				myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
+				myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
+			}
+
+		}
 	}
-	else if (time <= 10.f + prevTime) { // Dia
-		myColor = glm::vec3(1.f, 0.5f + 0.5f*sin(currentTime / 3.2f), 0.f);
-		myColor2 = glm::vec3(0.f, 0.f, 0.f);
-		myColorAmbient = glm::vec3(0.f, 0.f, 0.f);
-	}
-	else if (time > 10.f + prevTime && time <= 20.f + prevTime) { // Nit
-		myColor = glm::vec3(0.f, 0.f, 0.f);
-		myColor2 = glm::vec3(0.f, 0.f, 0.f);
-		//myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
+	else {
+		if (activateTS) {
+			time = currentTime;
+
+			if (time > 20.f + prevTime) {
+				prevTime = time;
+			}
+			// Dia
+			else if (time <= 10.f + prevTime) {
+				myColor = glm::vec3(1.f, 0.5f + 0.5f*sin(currentTime / 3.2f), 0.f);
+				myColor2 = glm::vec3(0.f, 0.f, 0.f);
+				myColorAmbient = glm::vec3(0.f, 0.f, 0.f);
+			}
+		}
+		else {
+			myColor = glm::vec3(0.f, 0.f, 0.f);
+			myColor2 = glm::vec3(0.32f, 0.6f, 0.78f);
+			myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
+		}
 	}
 
+	glm::vec3 bulbColor;
+
+	if (!activateTS) {
+		// Bulb Turned off
+		if (keyB == 0) {
+			bulbColor = glm::vec3(0.f, 0.f, 0.f);
+			myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+		}
+		// Bulb Turned On
+		else if (keyB == 1) {
+			bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
+			myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+		}
+		else if (keyB == 2) {
+			bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
+			myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+		}
+	}
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -1768,6 +1753,23 @@ void Exercise9(float currentTime) {
 				xoffset = -1.f;
 				MyLoadedModel::updateModel5(Transform(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 0.5f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset, 1.f), 1.8f, 1, 0.003f));
 				MyLoadedModel::drawModel5(currentTime, activateTS);
+
+				// Draw Bulb
+				if (!activateTS) {
+					if (keyB != 2) {
+						lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
+						Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
+						Sphere::drawSphere(bulbColor, false);
+					}
+					else {
+						// de 0 a -0.5
+						yBulb = -cos(currentTime / 1.f);
+						lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f)));
+						Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f))), 0.2f);
+						Sphere::drawSphere(bulbColor, false);
+					}
+				}
+
 			}
 			else {
 				// Draw chicken 
@@ -1796,7 +1798,6 @@ void Exercise9(float currentTime) {
 void Exercise10(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
 
@@ -1823,9 +1824,7 @@ void Exercise10(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	if (!key_t) {
-		activateTS = true;
-	}
+	if (!key_t) activateTS = true;
 	else activateTS = false;
 
 	time = currentTime;
@@ -1871,8 +1870,6 @@ void Exercise10(float currentTime) {
 
 	}
 
-	//time = currentTime;
-	std::cout << time << std::endl;
 	if (time > 20.f + prevTime) {
 		prevTime = time;
 	}
@@ -1887,7 +1884,6 @@ void Exercise10(float currentTime) {
 		if (!activateTS)
 			myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
 	}
-
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -1926,14 +1922,8 @@ void Exercise10(float currentTime) {
 void Exercise11(float currentTime) {
 	// Camera rotated 30 degrees along the Y axis
 	RV::rota[0] = glm::radians(30.f);
-
 	RV::panv[1] = 0.4f;
 	RV::panv[2] = -153.5f;
-
-	// Sol
-	/*lightPos = glm::vec3(0.f, 80.f*sin(currentTime / 3.2f), 80.f*cos(currentTime / 3.2f));
-	Sphere::updateSphere(lightPos, 3.f);
-	Sphere::drawSphere(glm::vec3(0.5f*sin(currentTime / 3.2f), 0.5f*sin(currentTime / 3.2f), 0.f), false);*/
 
 	// Lluna
 	lightPos2 = glm::vec3(0.f, 80.f*cos(currentTime / 3.2f), 80.f*sin(currentTime / 3.2f));
@@ -1953,17 +1943,24 @@ void Exercise11(float currentTime) {
 	float xoffset = 3.f;
 	float yoffset = -5.f;
 
-	if (!key_t) {
-		activateTS = true;
-	}
+	if (!key_t) activateTS = true;
 	else activateTS = false;
 
 	time = currentTime;
 
-	if (!key_b) {
+	glm::vec3 bulbColor;
+	// Bulb Turned off
+	if (keyB == 0) {
+		bulbColor = glm::vec3(0.f, 0.f, 0.f);
 		myColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
-	else {
+	// Bulb Turned On
+	else if (keyB == 1) {
+		bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
+		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
+	}
+	else if (keyB == 2) {
+		bulbColor = glm::vec3(0.59f, 0.78f, 0.58f);
 		myColor3 = glm::vec3(0.59f, 0.78f, 0.58f);
 	}
 
@@ -2007,30 +2004,11 @@ void Exercise11(float currentTime) {
 
 	}
 
-	//if (!key_d) {
-		//time = currentTime;
-		//std::cout << time << std::endl;
-		//if (time > 20.f + prevTime) {
-			//prevTime = time;
-		//}
-		//else if (time <= 10.f + prevTime) { // Dia
-		//	myColor = glm::vec3(1.f, 0.5f + 0.5f*sin(currentTime / 3.2f), 0.f);
-		//	myColor2 = glm::vec3(0.f, 0.f, 0.f);
-		//	myColorAmbient = glm::vec3(0.f, 0.f, 0.f);
-	//	}
-		//else if (time > 10.f + prevTime && time <= 20.f + prevTime) { // Nit
-			myColor = glm::vec3(0.f, 0.f, 0.f);
-			myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
-			if(!activateTS)
-				myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
-		//}
-	//}
-	//else {
-	//	myColor = glm::vec3(0.f, 0.f, 0.f);
-	//	myColor2 = glm::vec3(0.32f, 0.6f, 0.78f);
-	//	myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
-	//}
-
+	// Nit
+	myColor = glm::vec3(0.f, 0.f, 0.f);
+	myColor2 = glm::vec3(0.52f, 0.8f, 0.98f);
+	if(!activateTS)
+		myColorAmbient = glm::vec3(0.f, 0.f, 0.25f);
 
 	for (unsigned int i = 0; i < numCabins + 2; i++) {
 
@@ -2043,9 +2021,18 @@ void Exercise11(float currentTime) {
 				MyLoadedModel::drawModel5(currentTime, activateTS);
 
 				// Draw Bulb
-				lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
-				Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
-				Sphere::drawSphere(glm::vec3(0.59f, 0.78f, 0.58f), activateTS);
+				if (keyB != 2) {
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f);
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f, 1.f), 0.2f);
+					Sphere::drawSphere(bulbColor, false);
+				}
+				else {
+					// de 0 a -0.5
+					yBulb = -cos(currentTime / 1.f);
+					lightPos3 = glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f)));
+					Sphere::updateSphere(glm::vec3(circleSize*cos(2.f*pi*f*currentTime + fase) + xoffset + 2.2f, circleSize*sin(2.f*pi*f*currentTime + fase) + yoffset + 5.8f + yBulb, 1.f + (sin(currentTime / 2.f))), 0.2f);
+					Sphere::drawSphere(bulbColor, false);
+				}
 			}
 			else {
 				// Draw chicken 
@@ -2088,12 +2075,6 @@ void GUI() {
 	else if (exercise == 9)  ImGui::Begin("Exercise 9", &show, 0);
 	else if (exercise == 10) ImGui::Begin("Exercise 10", &show, 0);
 	else if (exercise == 11) ImGui::Begin("Exercise 11", &show, 0);
-	else if (exercise == 12) ImGui::Begin("Exercise 12", &show, 0);
-	else if (exercise == 13) ImGui::Begin("Exercise 13", &show, 0);
-	else if (exercise == 14) ImGui::Begin("Exercise 14", &show, 0);
-	else if (exercise == 15) ImGui::Begin("Exercise 15", &show, 0);
-	else if (exercise == 16) ImGui::Begin("Exercise 16", &show, 0);
-	else if (exercise == 17) ImGui::Begin("Exercise 17", &show, 0);
 	else ImGui::Begin("Welcome!", &show, 0);
 
 	// Do your GUI code here....
@@ -2101,17 +2082,13 @@ void GUI() {
 		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); // FrameRate
 
 		// Selecció d'exercici
-		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11", "Exercise 12", "Exercise 13", "Exercise 14", "Exercise 15", "Exercise 16", "Exercise 17" };
+		const char* listbox_items[] = { "Exercise 1", "Exercise 2", "Exercise 3", "Exercise 4", "Exercise 5", "Exercise 6", "Exercise 7", "Exercise 8", "Exercise 9", "Exercise 10", "Exercise 11" };
 		static int listbox_item_current = -1, listbox_item_current2 = -1;
 		ImGui::ListBox("Click on\nany exercise!\n\n(single select)", &listbox_item_current, listbox_items, IM_ARRAYSIZE(listbox_items), 6);
 		ImGui::PushItemWidth(-1);
 		ImGui::PopItemWidth();
 
 		exercise = listbox_item_current+1;
-		//SetActiveExercise(listbox_item_current + 1);
-
-		/*if (ImGui::Button("Toggle Light Move"))
-			light_moves = !light_moves;*/
 
 	}
 	// .........................
@@ -2129,13 +2106,6 @@ bool CheckClickOption() {
 	if (exercise == 0) return false;
 	else return false;
 }
-
-/*void SetActiveExercise(int num) {
-	for (unsigned int i = 1; i < NUMBER_EXERCISES; i++) {
-		if (i == num) exercise[i] = true;
-		else exercise[i] = false;
-	}
-}*/
 
 glm::mat4 Transform(glm::vec3 translate, float rotate, int rotAxis, float scale) {
 	glm::mat4 t = glm::translate(glm::mat4(), translate);
