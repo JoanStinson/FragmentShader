@@ -1,7 +1,7 @@
 # C++ OpenGL Fragment Shader
 
 - Toon Shading
-- Realistic Shading
+- Phong Shading
 - Color Effects
 - Lighting Effects
 
