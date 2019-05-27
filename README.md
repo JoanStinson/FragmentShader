@@ -1,8 +1,4 @@
 # C++ OpenGL Fragment Shader
 
-- Toon Shading
-- Phong Shading
-- Color Effects
-- Lighting Effects
-
+- ## Toon Shading, Phong Shading, Color and Lighting Effects
 ![](FragmentShader.gif)
